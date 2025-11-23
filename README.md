@@ -8,5 +8,3 @@ Vortex Hub: `Working 🟢`
 Vortex Web Search: `Working with placeholders 🟠`
 
 Vortex Music: `Not working 🔴`
-
-H
