@@ -5,9 +5,92 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vortex Search</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#1a1a1a',
+                        darkCard: '#2d2d2d'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script async src="https://cse.google.com/cse.js?cx=239aa370773134077"></script>
+
     <script src="../Javascript_folder/tailwind-script.js"></script>
     <link rel="stylesheet" href="../Css/styles.css">
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1086/1086933.png">
+
+    <style>
+
+        .gsc-search-box {
+            display: none !important;
+        }
+
+        .gsc-control-cse {
+            padding: 0 !important;
+            border: none !important;
+            background-color: transparent !important;
+            font-family: inherit !important;
+        }
+
+        .gsc-webResult.gsc-result {
+            background-color: transparent !important;
+            padding: 1rem 0 !important;
+            border-bottom: 1px solid #e5e7eb !important;
+        }
+
+        .gsc-adBlock {
+            opacity: 0.7;
+        }
+
+        .gs-title {
+            font-family: inherit !important;
+            text-decoration: none !important;
+        }
+        .gs-snippet {
+            font-family: inherit !important;
+            line-height: 1.6 !important;
+        }
+
+        html.dark .gsc-webResult.gsc-result {
+            border-bottom: 1px solid #374151 !important;
+        }
+
+        html.dark .gs-title {
+            color: #60a5fa !important; 
+        }
+
+        html.dark .gs-title b {
+            color: #60a5fa !important;
+        }
+
+        html.dark .gs-snippet {
+            color: #9ca3af !important; 
+        }
+
+        html.dark .gs-visibleUrl {
+            color: #d1d5db !important; 
+        }
+
+        html.dark .gsc-cursor-page {
+            color: #60a5fa !important;
+        }
+
+        .gsc-branding {
+            display: none !important;
+        }
+
+        .gsc-cursor-box {
+            margin-top: 20px;
+            text-align: left;
+        }
+    </style>
 </head>
 <body class="bg-white text-gray-800 dark:bg-darkBg dark:text-gray-200 transition-colors duration-300 min-h-screen flex flex-col font-sans">
 
@@ -119,124 +202,17 @@
             </div>
         </div>
 
-        <div class="px-4 md:px-[160px] py-3 text-sm text-gray-500 dark:text-gray-400" id="search-stats">
-            About 0 results (0.00 seconds)
-        </div>
+        <div class="flex flex-col lg:flex-row px-4 md:px-[160px] gap-10 pb-10 pt-6">
 
-        <div class="flex flex-col lg:flex-row px-4 md:px-[160px] gap-10 pb-10">
+            <div class="flex-1 max-w-3xl" id="results-container">
 
-            <div class="flex-1 max-w-3xl flex flex-col gap-8" id="results-container">
-
+                <div class="gcse-search" data-gname="vortexSearch" data-enableHistory="true"></div>
             </div>
 
-            <div class="hidden lg:block w-80 shrink-0">
-                <div id="knowledge-panel" class="bg-white dark:bg-darkCard border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm hidden">
-
-                    <div class="h-40 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4 overflow-hidden relative">
-                         <img id="kp-image" src="" class="w-full h-full object-cover opacity-80" alt="Topic">
-                    </div>
-                    <h2 id="kp-title" class="text-2xl font-serif mb-1">Title</h2>
-                    <div id="kp-subtitle" class="text-gray-500 text-sm mb-3">Subtitle</div>
-                    <p id="kp-desc" class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
-                        Description text goes here.
-                    </p>
-                    <div class="border-t border-gray-200 dark:border-gray-600 pt-3">
-                        <div class="grid grid-cols-2 gap-y-2 text-sm">
-                            <div class="font-bold text-gray-500">Born:</div>
-                            <div id="kp-fact1">Date</div>
-                            <div class="font-bold text-gray-500">Height:</div>
-                            <div id="kp-fact2">Val</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
     <script>
-
-        const database = [
-            {
-                title: "Tailwind CSS - Rapidly build modern websites without ever leaving your HTML.",
-                url: "https://tailwindcss.com",
-                displayUrl: "tailwindcss.com",
-                desc: "Tailwind CSS is a utility-first CSS framework for rapidly building custom designs. It is highly customizable and low-level.",
-                category: "dev"
-            },
-            {
-                title: "React – A JavaScript library for building user interfaces",
-                url: "https://reactjs.org",
-                displayUrl: "reactjs.org",
-                desc: "React makes it painless to create interactive UIs. Design simple views for each state in your application, and React will efficiently update and render just the right components.",
-                category: "dev"
-            },
-            {
-                title: "SpaceX - Partial Reusability",
-                url: "https://www.spacex.com",
-                displayUrl: "www.spacex.com",
-                desc: "SpaceX designs, manufactures and launches advanced rockets and spacecraft. The company was founded in 2002 to revolutionize space technology.",
-                category: "space",
-                knowledge: {
-                    title: "SpaceX",
-                    subtitle: "Aerospace company",
-                    desc: "Space Exploration Technologies Corp. is an American spacecraft manufacturer, launcher, and satellite communications corporation headquartered in Hawthorne, California.",
-                    image: "https://images.unsplash.com/photo-1517976487492-5750f3195933?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-                    fact1: "2002",
-                    fact2: "Elon Musk"
-                }
-            },
-            {
-                title: "NASA - National Aeronautics and Space Administration",
-                url: "https://www.nasa.gov",
-                displayUrl: "www.nasa.gov",
-                desc: "NASA explores the unknown in air and space, innovates for the benefit of humanity, and inspires the world through discovery.",
-                category: "space"
-            },
-            {
-                title: "Perfect Coffee Brewing Guide",
-                url: "https://coffee.example.com/guide",
-                displayUrl: "coffee.example.com › guide",
-                desc: "Learn how to brew the perfect cup of coffee. From French Press to Pour Over, we cover the grind size, water temperature, and ratios.",
-                category: "life"
-            },
-            {
-                title: "JavaScript | MDN",
-                url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
-                displayUrl: "developer.mozilla.org › docs › Web › JavaScript",
-                desc: "JavaScript (JS) is a lightweight, interpreted, or just-in-time compiled programming language with first-class functions.",
-                category: "dev"
-            },
-            {
-                title: "OpenAI",
-                url: "https://openai.com",
-                displayUrl: "openai.com",
-                desc: "OpenAI is an AI research and deployment company. Our mission is to ensure that artificial general intelligence benefits all of humanity.",
-                category: "tech",
-                knowledge: {
-                    title: "OpenAI",
-                    subtitle: "Artificial intelligence research laboratory",
-                    desc: "OpenAI consists of the non-profit OpenAI Incorporated and its for-profit subsidiary corporation OpenAI Limited Partnership.",
-                    image: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-                    fact1: "2015",
-                    fact2: "Sam Altman"
-                }
-            },
-            {
-                title: "The Best Pizza Recipe",
-                url: "https://cooking.example.com/pizza",
-                displayUrl: "cooking.example.com › recipes › pizza",
-                desc: "Homemade pizza dough and sauce recipes. Get that crispy crust and perfect cheese melt right in your home oven.",
-                category: "life"
-            },
-             {
-                title: "Introduction to Python",
-                url: "https://python.org",
-                displayUrl: "python.org",
-                desc: "Python is a programming language that lets you work quickly and integrate systems more effectively.",
-                category: "dev"
-            },
-        ];
-
         let isDarkMode = false;
 
         function toggleTheme() {
@@ -257,7 +233,6 @@
         }
 
         function goHome() {
-
             document.getElementById('home-search-input').value = '';
             document.getElementById('nav-search-input').value = '';
 
@@ -301,7 +276,6 @@
                 window.location.href = "https://www.google.com/doodles"; 
                 return;
             }
-
             goResults(query);
         }
 
@@ -319,93 +293,20 @@
         });
 
         function renderResults(query) {
-            const container = document.getElementById('results-container');
-            const stats = document.getElementById('search-stats');
-            const kp = document.getElementById('knowledge-panel');
 
-            container.innerHTML = ''; 
-            kp.classList.add('hidden'); 
-
-            const lowerQuery = query.toLowerCase();
-            const results = database.filter(item => 
-                item.title.toLowerCase().includes(lowerQuery) || 
-                item.desc.toLowerCase().includes(lowerQuery) ||
-                item.url.toLowerCase().includes(lowerQuery)
-            );
-
-            container.innerHTML = `<div class="animate-pulse space-y-8 max-w-3xl">
-                ${[1,2,3].map(() => `
-                <div class="space-y-3">
-                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-                    <div class="h-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                </div>`).join('')}
-            </div>`;
-            stats.innerText = 'Searching...';
-
-            setTimeout(() => {
-
-                const time = (Math.random() * 0.5 + 0.1).toFixed(2);
-                stats.innerHTML = `About ${results.length} results (${time} seconds)`;
-
-                container.innerHTML = '';
-
-                if (results.length === 0) {
-                    container.innerHTML = `
-                        <div class="p-4 text-gray-600 dark:text-gray-400">
-                            <p class="text-lg mb-2">Your search - <span class="font-bold text-gray-800 dark:text-gray-200">${query}</span> - did not match any documents.</p>
-                            <p>Suggestions:</p>
-                            <ul class="list-disc ml-5 mt-2 space-y-1">
-                                <li>Try searching for "Tailwind", "SpaceX", or "Pizza".</li>
-                                <li>Make sure that all words are spelled correctly.</li>
-                                <li>Try different keywords.</li>
-                            </ul>
-                        </div>
-                    `;
-                    return;
+            const checkGoogle = setInterval(() => {
+                if (window.google && google.search && google.search.cse && google.search.cse.element) {
+                    clearInterval(checkGoogle);
+                    const element = google.search.cse.element.getElement('vortexSearch');
+                    if (element) {
+                        element.execute(query);
+                    } else {
+                        console.error("Google Search Element not found yet.");
+                    }
                 }
+            }, 100);
 
-                if (results[0].knowledge) {
-                    const data = results[0].knowledge;
-                    kp.classList.remove('hidden');
-                    document.getElementById('kp-title').innerText = data.title;
-                    document.getElementById('kp-subtitle').innerText = data.subtitle;
-                    document.getElementById('kp-desc').innerText = data.desc;
-                    document.getElementById('kp-image').src = data.image;
-                    document.getElementById('kp-fact1').innerText = data.fact1;
-                    document.getElementById('kp-fact2').innerText = data.fact2;
-                }
-
-                results.forEach(item => {
-
-                    const highlight = (text) => {
-                        const regex = new RegExp(`(${query})`, 'gi');
-                        return text.replace(regex, '<span class="text-gray-900 dark:text-white font-bold">$1</span>');
-                    };
-
-                    const div = document.createElement('div');
-                    div.className = 'group';
-                    div.innerHTML = `
-                        <div class="flex flex-col mb-1">
-                            <a href="${item.url}" class="text-sm text-gray-800 dark:text-gray-300 flex items-center gap-2 truncate">
-                                <div class="bg-gray-100 dark:bg-gray-700 rounded-full p-1 w-6 h-6 flex items-center justify-center text-xs text-gray-500 uppercase">
-                                    ${item.displayUrl.charAt(0)}
-                                </div>
-                                <span class="group-hover:underline">${item.displayUrl}</span>
-                                <span class="text-gray-400 text-xs ml-1">▼</span>
-                            </a>
-                            <a href="${item.url}" class="text-xl text-blue-600 hover:underline visited:text-purple-700 dark:text-blue-400 dark:visited:text-purple-400 font-medium mt-1">
-                                ${item.title}
-                            </a>
-                        </div>
-                        <div class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed max-w-2xl">
-                            ${highlight(item.desc)}
-                        </div>
-                    `;
-                    container.appendChild(div);
-                });
-
-            }, 400); 
+            setTimeout(() => clearInterval(checkGoogle), 5000);
         }
     </script>
 </body>
