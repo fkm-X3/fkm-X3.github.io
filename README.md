@@ -5,6 +5,6 @@ hello user this is a github pages repostiory if you want to see the website go t
 
 Vortex Hub: `Working 🟢`
 
-Vortex Web Search: `Working with placeholders 🟠`
+Vortex Web Search: `Not working 🔴`
 
 Vortex Music: `Not working 🔴`
