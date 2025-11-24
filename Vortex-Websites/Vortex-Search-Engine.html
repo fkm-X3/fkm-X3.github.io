@@ -20,18 +20,19 @@
         }
     </script>
 
-    <script async src="https://cse.google.com/cse.js?cx=239aa370773134077"></script>
-
-    <script src="../Javascript_folder/tailwind-script.js"></script>
-    <link rel="stylesheet" href="../Css/styles.css">
+    <script async src="https://cse.google.com/cse.js?cx=INSERT_YOUR_GOOGLE_CX_ID_HERE"></script>
+    
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1086/1086933.png">
 
     <style>
+        /* --- GOOGLE CSE OVERRIDES TO MATCH VORTEX THEME --- */
 
-        .gsc-search-box {
+        /* Hide the default Google Search Bar - we use our own */
+        .gsc-search-box, .gsc-search-button, .gsc-input {
             display: none !important;
         }
 
+        /* General Container Reset */
         .gsc-control-cse {
             padding: 0 !important;
             border: none !important;
@@ -39,56 +40,137 @@
             font-family: inherit !important;
         }
 
+        /* Result Items */
         .gsc-webResult.gsc-result {
             background-color: transparent !important;
-            padding: 1rem 0 !important;
+            padding: 1.5rem 0 !important;
             border-bottom: 1px solid #e5e7eb !important;
+            margin-bottom: 0 !important;
         }
-
-        .gsc-adBlock {
-            opacity: 0.7;
+        
+        /* Remove wrapper padding */
+        .gsc-wrapper {
+            padding: 0 !important;
         }
-
+        
+        /* Titles */
         .gs-title {
             font-family: inherit !important;
             text-decoration: none !important;
+            font-size: 1.25rem !important;
+            height: auto !important; 
         }
-        .gs-snippet {
-            font-family: inherit !important;
-            line-height: 1.6 !important;
+        .gs-title a {
+            color: #2563eb !important; /* Tailwind blue-600 */
+            text-decoration: none !important;
+        }
+        .gs-title a:hover {
+            text-decoration: underline !important;
         }
 
+        /* Snippet/Text */
+        .gs-snippet {
+            font-family: inherit !important;
+            font-size: 0.95rem !important;
+            line-height: 1.6 !important;
+            color: #4b5563 !important; /* Tailwind gray-600 */
+            margin-top: 4px !important;
+        }
+
+        /* URL/Breadcrumb */
+        .gs-visibleUrl {
+            color: #1f2937 !important;
+            font-size: 0.875rem !important;
+            margin-bottom: 4px !important;
+        }
+
+        /* Promos/Ads styling to match */
+        .gsc-adBlock {
+            background: transparent !important;
+            border: none !important;
+            margin-bottom: 1rem !important;
+        }
+
+        /* Pagination Styling */
+        .gsc-cursor-box {
+            margin-top: 30px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        .gsc-cursor-page {
+            display: inline-block;
+            padding: 8px 12px;
+            margin-right: 8px;
+            border-radius: 6px;
+            background-color: #f3f4f6;
+            color: #374151 !important;
+            text-decoration: none !important;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .gsc-cursor-page:hover {
+            background-color: #e5e7eb;
+        }
+        .gsc-cursor-current-page {
+            background-color: #2563eb !important;
+            color: white !important;
+        }
+
+        /* --- DARK MODE OVERRIDES --- */
+        
         html.dark .gsc-webResult.gsc-result {
             border-bottom: 1px solid #374151 !important;
         }
 
-        html.dark .gs-title {
-            color: #60a5fa !important; 
-        }
-
+        html.dark .gs-title a,
         html.dark .gs-title b {
-            color: #60a5fa !important;
+            color: #60a5fa !important; /* Tailwind blue-400 */
         }
 
         html.dark .gs-snippet {
-            color: #9ca3af !important; 
+            color: #9ca3af !important; /* Tailwind gray-400 */
         }
 
         html.dark .gs-visibleUrl {
             color: #d1d5db !important; 
         }
-
+        
         html.dark .gsc-cursor-page {
-            color: #60a5fa !important;
+            background-color: #2d2d2d;
+            color: #d1d5db !important;
+        }
+        html.dark .gsc-cursor-page:hover {
+            background-color: #374151;
+        }
+        html.dark .gsc-cursor-current-page {
+            background-color: #3b82f6 !important;
+            color: white !important;
         }
 
-        .gsc-branding {
+        /* Hide Google Branding crap */
+        .gcsc-branding {
             display: none !important;
         }
-
-        .gsc-cursor-box {
-            margin-top: 20px;
-            text-align: left;
+        .gsc-url-top, .gsc-url-bottom {
+            display: none !important;
+        }
+        
+        /* Animation utility */
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Hide scrollbar for horizontal nav */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
@@ -123,11 +205,9 @@
 
             <div class="flex items-center gap-3 ml-auto">
                 <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" aria-label="Toggle Dark Mode">
-
                     <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden dark:block text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
-
                     <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 block dark:hidden text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                     </svg>
@@ -203,16 +283,14 @@
         </div>
 
         <div class="flex flex-col lg:flex-row px-4 md:px-[160px] gap-10 pb-10 pt-6">
-
             <div class="flex-1 max-w-3xl" id="results-container">
-
-                <div class="gcse-search" data-gname="vortexSearch" data-enableHistory="true"></div>
+                <div class="gcse-search" data-gname="vortexSearch" data-enableHistory="true" data-queryParameterName="q"></div>
             </div>
-
         </div>
     </div>
 
     <script>
+        // --- THEME LOGIC ---
         let isDarkMode = false;
 
         function toggleTheme() {
@@ -227,18 +305,24 @@
             }
         }
 
+        // Initialize Theme
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             isDarkMode = true;
             document.documentElement.classList.add('dark');
         }
 
+        // --- NAVIGATION LOGIC ---
+
         function goHome() {
+            // Reset inputs
             document.getElementById('home-search-input').value = '';
             document.getElementById('nav-search-input').value = '';
 
+            // Toggle Views
             document.getElementById('home-view').classList.remove('hidden');
             document.getElementById('results-view').classList.add('hidden');
 
+            // Toggle Nav Elements
             document.getElementById('nav-logo').classList.add('hidden');
             document.getElementById('nav-search-container').classList.add('hidden');
             document.getElementById('navbar').classList.remove('border-b', 'border-gray-200', 'dark:border-gray-700', 'shadow-sm');
@@ -247,16 +331,20 @@
         function goResults(query) {
             if (!query.trim()) return;
 
+            // Sync Inputs
             document.getElementById('home-search-input').value = query;
             document.getElementById('nav-search-input').value = query;
 
+            // Toggle Views
             document.getElementById('home-view').classList.add('hidden');
             document.getElementById('results-view').classList.remove('hidden');
 
+            // Toggle Nav Elements
             document.getElementById('nav-logo').classList.remove('hidden');
             document.getElementById('nav-search-container').classList.remove('hidden');
             document.getElementById('navbar').classList.add('border-b', 'border-gray-200', 'dark:border-gray-700', 'shadow-sm');
 
+            // Execute Google Search
             renderResults(query);
         }
 
@@ -276,14 +364,18 @@
                 window.location.href = "https://www.google.com/doodles"; 
                 return;
             }
+            // In a real app, this might query an API to get the first URL. 
+            // For CSE, we just search.
             goResults(query);
         }
 
         function clearSearch() {
-             document.getElementById('nav-search-input').value = '';
-             document.getElementById('nav-search-input').focus();
+             const input = document.getElementById('nav-search-input');
+             input.value = '';
+             input.focus();
         }
 
+        // Event Listeners
         document.getElementById('home-search-input').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') performSearchFromHome();
         });
@@ -292,21 +384,25 @@
             if (e.key === 'Enter') performSearchFromNav();
         });
 
-        function renderResults(query) {
+        // --- SEARCH EXECUTION ---
 
+        function renderResults(query) {
+            // We wait until the google object is fully loaded
             const checkGoogle = setInterval(() => {
                 if (window.google && google.search && google.search.cse && google.search.cse.element) {
                     clearInterval(checkGoogle);
+                    // Retrieve the element by the name we defined in data-gname="vortexSearch"
                     const element = google.search.cse.element.getElement('vortexSearch');
                     if (element) {
                         element.execute(query);
                     } else {
-                        console.error("Google Search Element not found yet.");
+                        console.error("Vortex Search Element not initialized.");
                     }
                 }
             }, 100);
 
-            setTimeout(() => clearInterval(checkGoogle), 5000);
+            // Timeout safety
+            setTimeout(() => clearInterval(checkGoogle), 8000);
         }
     </script>
 </body>
