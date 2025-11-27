@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin Panel - Login</title>
+  <title>Admin Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -310,10 +310,11 @@
                   <span class="text-gray-400">→</span>
                 </button>
                 <button
-                  class="w-full inline-flex items-center justify-between px-3 py-2 rounded-md bg-gray-50 text-xs text-gray-800 hover:bg-gray-100"
+                  onclick="openAnnouncementModal()"
+                  class="w-full inline-flex items-center justify-between px-3 py-2 rounded-md bg-gray-50 text-xs text-gray-800 hover:bg-gray-100 transition-colors"
                   data-min-level="2"
                 >
-                  View All Orders / Announcements
+                  Post Announcement
                   <span class="text-gray-400">→</span>
                 </button>
                 <button
@@ -357,7 +358,18 @@
       </main>
     </div>
   </div>
-
+  <div id="announcement-modal" class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white p-6 rounded-xl w-96 shadow-2xl border border-gray-200">
+      <h3 class="text-lg font-bold mb-4 text-gray-800">Post New Announcement</h3>
+    
+      <textarea id="announcement-text" class="w-full border border-gray-300 p-3 rounded-lg mb-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" rows="4" placeholder="Type your message here..."></textarea>
+    
+      <div class="flex justify-end gap-2">
+        <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition-colors">Cancel</button>
+        <button onclick="sendAnnouncement()" class="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors font-medium">Post Live</button>
+      </div>
+    </div>
+  </div>
   <!-- Key-based login logic -->
   <script type="module">
     // Import the functions you need from the SDKs you need
@@ -381,9 +393,41 @@
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-  </script>
-  <script>
+    const db = getDatabase(app);
+
+    window.openAnnouncementModal = function() {
+    // Check if user is at least Level 2 (using your existing variable)
+    if (typeof userLevel !== 'undefined' && userLevel >= 2) {
+      document.getElementById('announcement-modal').classList.remove('hidden');
+    } else {
+      alert("Access Denied: You need Level 2 or higher to post announcements.");
+    }
+  }
+
+  // Function to close the popup
+  window.closeModal = function() {
+    document.getElementById('announcement-modal').classList.add('hidden');
+    document.getElementById('announcement-text').value = ""; // Clear text
+  }
+
+  // Function to SEND data to Firebase
+  window.sendAnnouncement = function() {
+    const text = document.getElementById('announcement-text').value;
+  
+    if (!text) return alert("Please type a message!");
+
+    // This saves the data to the cloud
+    set(ref(db, 'announcement'), {
+      message: text,
+      timestamp: Date.now()
+    }).then(() => {
+      alert('Announcement updated on all screens!');
+      closeModal();
+    }).catch((error) => {
+      alert('Error: ' + error.message);
+    });
+  }
+
     const loginForm = document.getElementById('login-form');
     const loginScreen = document.getElementById('login-screen');
     const loginCard = document.getElementById('login-card');
