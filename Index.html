@@ -6,40 +6,87 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Simple login / dashboard animations -->
+  <style>
+    .animate-login-in {
+      animation: loginIn 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+    }
+
+    .animate-login-out {
+      animation: loginOut 0.4s ease forwards;
+    }
+
+    .animate-admin-in {
+      animation: adminIn 0.45s ease forwards;
+    }
+
+    @keyframes loginIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes loginOut {
+      from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.98);
+      }
+    }
+
+    @keyframes adminIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
 </head>
 <body class="bg-gray-100 text-gray-900 relative">
 
-  <!-- Wrong-site Overlay -->
+  <!-- Error Overlay (invalid or unauthorized key) -->
   <div
-    id="wrong-site-overlay"
+    id="error-overlay"
     class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center px-4"
   >
     <div class="max-w-xl w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
       <h2 class="text-2xl font-bold text-gray-900 mb-4">
-        Hey buddy!
+        Access denied
       </h2>
       <p class="text-gray-700 mb-3">
-        It seems you're going to the wrong website.
+        The key file you provided is invalid or you don't have permission to access this panel.
       </p>
       <p class="text-gray-700 mb-3">
-        If you're here for games, go to:
+        Make sure you're using the correct <span class="font-semibold">.txt key file</span> and try again.
       </p>
-      <a
-        href="https://thomasjearl2011-hue.github.io/thomasjearl2011.github.io/"
-        class="inline-block text-indigo-600 font-semibold underline break-all mb-6"
-        target="_blank" rel="noopener noreferrer"
+      <button
+        id="error-overlay-close"
+        class="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-md bg-indigo-600 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
       >
-        https://thomasjearl2011-hue.github.io/thomasjearl2011.github.io/
-      </a>
-      <p class="text-xs text-gray-500">
-        (You can close this tab or use the link above.)
-      </p>
+        Close
+      </button>
     </div>
   </div>
 
   <!-- Login Screen -->
   <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-    <div class="w-full max-w-md bg-gray-900/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700 p-8 text-gray-100">
+    <div id="login-card" class="w-full max-w-md bg-gray-900/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700 p-8 text-gray-100 animate-login-in">
       <div class="mb-6 text-center">
         <div class="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-indigo-500 mb-3">
           <span class="text-xl font-bold">A</span>
@@ -50,43 +97,37 @@
 
       <form id="login-form" class="space-y-4">
         <div>
-          <label for="username" class="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wide">
-            Username
+          <label for="key-file" class="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wide">
+            Key file
           </label>
           <input
-            id="username"
-            name="username"
-            type="text"
-            class="w-full px-3 py-2 rounded-md bg-gray-800 border border-gray-700 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Example Username"
+            id="key-file"
+            name="key-file"
+            type="file"
+            accept=".txt"
+            class="block w-full text-sm text-gray-300
+                   file:mr-4 file:py-2 file:px-4
+                   file:rounded-md file:border-0
+                   file:text-sm file:font-semibold
+                   file:bg-indigo-600 file:text-white
+                   hover:file:bg-indigo-700"
             required
           />
-        </div>
-
-        <div>
-          <label for="password" class="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wide">
-            Password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            class="w-full px-3 py-2 rounded-md bg-gray-800 border border-gray-700 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="••••••••"
-            required
-          />
+          <p class="mt-2 text-[11px] text-gray-500">
+            Upload your <span class="font-semibold">.txt key</span>. The file contains your visual info and an access <span class="font-semibold">level</span> (1–3).
+          </p>
         </div>
 
         <button
           type="submit"
           class="w-full inline-flex items-center justify-center px-4 py-2.5 mt-2 rounded-md bg-indigo-600 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900"
         >
-          Log In
+          Use key
         </button>
       </form>
 
       <p class="mt-6 text-[11px] text-center text-gray-500">
-        Demo login — required user: <span class="font-semibold">Admin</span>, password: <span class="font-semibold">1234</span>.
+        Levels: <span class="font-semibold">1</span> = view only, <span class="font-semibold">2</span> = announcements, <span class="font-semibold">3</span> = full control.
       </p>
     </div>
   </div>
@@ -115,9 +156,14 @@
         </a>
       </nav>
 
-      <div class="px-4 py-3 border-t border-gray-800 text-xs text-gray-400">
-        Logged in as<br />
-        <span id="current-user" class="font-medium text-gray-200">Admin</span>
+      <div class="px-4 py-3 border-t border-gray-800 text-xs text-gray-400 space-y-1">
+        <div>
+          Logged in as<br />
+          <span id="current-user" class="font-medium text-gray-200">User</span>
+        </div>
+        <div>
+          Level: <span id="current-level" class="font-semibold text-indigo-400">1</span>
+        </div>
       </div>
     </aside>
 
@@ -199,7 +245,10 @@
           <div class="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
               <h2 class="text-sm font-semibold text-gray-800">Recent Users</h2>
-              <button class="inline-flex items-center px-3 py-1.5 rounded-md bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700">
+              <button
+                class="inline-flex items-center px-3 py-1.5 rounded-md bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700"
+                data-min-level="3"
+              >
                 + Add User
               </button>
             </div>
@@ -225,8 +274,8 @@
                       </span>
                     </td>
                     <td class="px-4 py-2 text-right whitespace-nowrap">
-                      <button class="text-xs text-indigo-600 hover:underline mr-3">Edit</button>
-                      <button class="text-xs text-red-600 hover:underline">Delete</button>
+                      <button class="text-xs text-indigo-600 hover:underline mr-3" data-min-level="3">Edit</button>
+                      <button class="text-xs text-red-600 hover:underline" data-min-level="3">Delete</button>
                     </td>
                   </tr>
                   <tr class="hover:bg-gray-50">
@@ -253,15 +302,24 @@
             <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
               <h2 class="text-sm font-semibold text-gray-800 mb-3">Quick Actions</h2>
               <div class="space-y-2">
-                <button class="w-full inline-flex items-center justify-between px-3 py-2 rounded-md bg-gray-50 text-xs text-gray-800 hover:bg-gray-100">
+                <button
+                  class="w-full inline-flex items-center justify-between px-3 py-2 rounded-md bg-gray-50 text-xs text-gray-800 hover:bg-gray-100"
+                  data-min-level="3"
+                >
                   Create New User
                   <span class="text-gray-400">→</span>
                 </button>
-                <button class="w-full inline-flex items-center justify-between px-3 py-2 rounded-md bg-gray-50 text-xs text-gray-800 hover:bg-gray-100">
-                  View All Orders
+                <button
+                  class="w-full inline-flex items-center justify-between px-3 py-2 rounded-md bg-gray-50 text-xs text-gray-800 hover:bg-gray-100"
+                  data-min-level="2"
+                >
+                  View All Orders / Announcements
                   <span class="text-gray-400">→</span>
                 </button>
-                <button class="w-full inline-flex items-center justify-between px-3 py-2 rounded-md bg-gray-50 text-xs text-gray-800 hover:bg-gray-100">
+                <button
+                  class="w-full inline-flex items-center justify-between px-3 py-2 rounded-md bg-gray-50 text-xs text-gray-800 hover:bg-gray-100"
+                  data-min-level="3"
+                >
                   System Settings
                   <span class="text-gray-400">→</span>
                 </button>
@@ -300,46 +358,182 @@
     </div>
   </div>
 
-  <!-- Login logic -->
+  <!-- Key-based login logic -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    const firebaseConfig = {
+      apiKey: "AIzaSyDWGcagecOrdCn7BuBeA72ICFkeH7QWePc",
+      authDomain: "nexus-hub-caeab.firebaseapp.com",
+      databaseURL: "https://nexus-hub-caeab-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "nexus-hub-caeab",
+      storageBucket: "nexus-hub-caeab.firebasestorage.app",
+      messagingSenderId: "45490042276",
+      appId: "1:45490042276:web:5dd49816f386fc23193d31",
+      measurementId: "G-MM3NHNWYZX"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+  </script>
   <script>
     const loginForm = document.getElementById('login-form');
     const loginScreen = document.getElementById('login-screen');
+    const loginCard = document.getElementById('login-card');
     const adminApp = document.getElementById('admin-app');
     const currentUser = document.getElementById('current-user');
+    const currentLevel = document.getElementById('current-level');
     const topbarUser = document.getElementById('topbar-user');
     const avatarInitials = document.getElementById('avatar-initials');
     const logoutBtn = document.getElementById('logout-btn');
-    const wrongSiteOverlay = document.getElementById('wrong-site-overlay');
+    const errorOverlay = document.getElementById('error-overlay');
+    const errorOverlayClose = document.getElementById('error-overlay-close');
+    const keyFileInput = document.getElementById('key-file');
 
-    const VALID_USER = 'Admin';
-    const VALID_PASS = '1234';
+    let userLevel = 1;
+
+    function parseKeyFileContent(text) {
+      // Find a line containing "level" and a value 1-3
+      const levelMatch = text.match(/level\s*[:=]\s*([1-3])/i);
+      const level = levelMatch ? parseInt(levelMatch[1], 10) : 1;
+
+      // Everything else can be used for visuals - take the first non-empty non-level line as the display name
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      let displayName = 'User';
+      for (const line of lines) {
+        if (/level\s*[:=]/i.test(line)) continue;
+        displayName = line;
+        break;
+      }
+
+      return { displayName, level: Math.min(Math.max(level, 1), 3) };
+    }
+
+    function applyLevelPermissions(level) {
+      // Update little badge
+      if (currentLevel) {
+        currentLevel.textContent = String(level);
+      }
+
+      // Disable actions the user is not allowed to use
+      const privileged = document.querySelectorAll('[data-min-level]');
+      privileged.forEach(el => {
+        const min = parseInt(el.getAttribute('data-min-level') || '1', 10);
+        if (Number.isNaN(min)) return;
+
+        if (level < min) {
+          el.classList.add('opacity-50', 'pointer-events-none', 'cursor-not-allowed');
+          el.setAttribute('title', 'Insufficient permissions for your level');
+        } else {
+          el.classList.remove('opacity-50', 'pointer-events-none', 'cursor-not-allowed');
+          el.removeAttribute('title');
+        }
+      });
+    }
+
+    function completeLogin(displayName, level) {
+      userLevel = level;
+
+      currentUser.textContent = displayName;
+      topbarUser.textContent = displayName;
+      avatarInitials.textContent = displayName
+        .split(' ')
+        .map(part => part[0]?.toUpperCase())
+        .join('')
+        .slice(0, 2) || 'US';
+
+      applyLevelPermissions(level);
+
+      // Play a quick exit animation on the login card, then fade in the admin app
+      loginCard.classList.remove('animate-login-in');
+      loginCard.classList.add('animate-login-out');
+
+      const handleAnimationEnd = (event) => {
+        if (event.target !== loginCard) return;
+
+        loginCard.classList.remove('animate-login-out');
+        loginScreen.classList.add('hidden');
+        adminApp.classList.remove('hidden');
+        adminApp.classList.add('animate-admin-in');
+
+        loginCard.removeEventListener('animationend', handleAnimationEnd);
+      };
+
+      loginCard.addEventListener('animationend', handleAnimationEnd);
+    }
+
+    function showErrorOverlay() {
+      if (errorOverlay) {
+        errorOverlay.classList.remove('hidden');
+      }
+    }
+
+    if (errorOverlayClose && errorOverlay) {
+      errorOverlayClose.addEventListener('click', () => {
+        errorOverlay.classList.add('hidden');
+      });
+    }
 
     loginForm.addEventListener('submit', function (e) {
       e.preventDefault();
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
 
-      if (username === VALID_USER && password === VALID_PASS) {
-        currentUser.textContent = username;
-        topbarUser.textContent = username;
-        avatarInitials.textContent = username
-          .split(' ')
-          .map(part => part[0]?.toUpperCase())
-          .join('')
-          .slice(0, 2) || 'AD';
-
-        loginScreen.classList.add('hidden');
-        adminApp.classList.remove('hidden');
-      } else {
-        // Show full-screen overlay
-        wrongSiteOverlay.classList.remove('hidden');
+      const file = keyFileInput.files[0];
+      if (!file) {
+        showErrorOverlay();
+        return;
       }
+
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        try {
+          const text = String(event.target.result || '');
+          const { displayName, level } = parseKeyFileContent(text);
+
+          // If the level wasn't found at all, treat as invalid key
+          if (!/level\s*[:=]\s*[1-3]/i.test(text)) {
+            showErrorOverlay();
+            return;
+          }
+
+          completeLogin(displayName, level);
+        } catch (err) {
+          console.error('Error reading key file', err);
+          showErrorOverlay();
+        }
+      };
+
+      reader.onerror = () => {
+        showErrorOverlay();
+      };
+
+      reader.readAsText(file);
     });
 
     logoutBtn.addEventListener('click', function () {
+      // Hide admin app and reset its entrance animation
       adminApp.classList.add('hidden');
+      adminApp.classList.remove('animate-admin-in');
+
+      // Show login screen and replay the entrance animation on the card
       loginScreen.classList.remove('hidden');
       loginForm.reset();
+      userLevel = 1;
+      applyLevelPermissions(userLevel);
+      currentUser.textContent = 'User';
+      topbarUser.textContent = 'User';
+      avatarInitials.textContent = 'US';
+
+      loginCard.classList.remove('animate-login-out');
+      void loginCard.offsetWidth; // restart animation
+      loginCard.classList.add('animate-login-in');
     });
   </script>
 </body>
