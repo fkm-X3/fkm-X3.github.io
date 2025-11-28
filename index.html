@@ -1,585 +1,684 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Admin Panel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Tailwind CDN -->
+  <meta charset="utf-8" />
+  <title>Admin Panel — Modern Glass UI</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Simple login / dashboard animations -->
   <style>
-    .animate-login-in {
-      animation: loginIn 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+
+    :root {
+      --glass-bg: rgba(255,255,255,0.06);
+      --glass-border: rgba(255,255,255,0.08);
+      --glass-card: rgba(255,255,255,0.04);
+      --glass-text: rgba(255,255,255,0.95);
     }
 
-    .animate-login-out {
-      animation: loginOut 0.4s ease forwards;
+    .glass {
+      background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(8px) saturate(120%);
     }
 
-    .animate-admin-in {
-      animation: adminIn 0.45s ease forwards;
+    .glass-strong {
+      background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px) saturate(140%);
     }
 
-    @keyframes loginIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.98);
-      }
+    .animate-login-in { animation: loginIn 0.6s cubic-bezier(.22,.61,.36,1) forwards;}
+    .animate-login-out { animation: loginOut 0.45s ease forwards;}
+    .animate-admin-in { animation: adminIn 0.48s ease forwards;}
 
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
+    @keyframes loginIn { from{opacity:0;transform:translateY(14px) scale(.99)} to{opacity:1;transform:none} }
+    @keyframes loginOut { from{opacity:1} to{opacity:0;transform:translateY(-8px) scale(.995)} }
+    @keyframes adminIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+    .spinner {
+      border: 4px solid rgba(255,255,255,0.06);
+      border-top-color: rgba(255,255,255,0.9);
+      border-radius: 9999px;
+      width: 44px;
+      height: 44px;
+      animation: spin 0.95s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .toast-enter { transform: translateY(10px); opacity: 0; transition: all .28s ease; }
+    .toast-show { transform: translateY(0); opacity: 1; }
+
+    .perm-disabled {
+      opacity: 0.45;
+      pointer-events: none;
+      filter: grayscale(.05);
     }
 
-    @keyframes loginOut {
-      from {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
+    [data-hidden="true"] { display: none !important; }
 
-      to {
-        opacity: 0;
-        transform: translateY(-10px) scale(0.98);
-      }
-    }
-
-    @keyframes adminIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+    .dark .glass { background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-color: rgba(255,255,255,0.03); }
   </style>
 </head>
-<body class="bg-gray-100 text-gray-900 relative">
+<body class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100">
 
-  <!-- Error Overlay (invalid or unauthorized key) -->
-  <div
-    id="error-overlay"
-    class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center px-4"
-  >
-    <div class="max-w-xl w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
-      <h2 class="text-2xl font-bold text-gray-900 mb-4">
-        Access denied
-      </h2>
-      <p class="text-gray-700 mb-3">
-        The key file you provided is invalid or you don't have permission to access this panel.
-      </p>
-      <p class="text-gray-700 mb-3">
-        Make sure you're using the correct <span class="font-semibold">.txt key file</span> and try again.
-      </p>
-      <button
-        id="error-overlay-close"
-        class="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-md bg-indigo-600 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      >
-        Close
-      </button>
+<div id="loading-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60">
+  <div class="flex flex-col items-center gap-4">
+    <div class="spinner"></div>
+    <div class="text-sm text-gray-200">Reading key & signing in…</div>
+  </div>
+</div>
+
+<div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-end"></div>
+
+<div id="error-overlay" class="fixed inset-0 z-40 hidden items-center justify-center px-4">
+  <div class="max-w-xl w-full glass-strong rounded-2xl shadow-2xl p-6 text-center">
+    <h2 id="error-title" class="text-xl font-semibold text-white/95 mb-2">Notice</h2>
+    <p id="error-reason" class="text-gray-200/80 mb-4"></p>
+    <div class="flex justify-center">
+      <button id="error-overlay-close" class="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">Close</button>
     </div>
   </div>
+</div>
 
-  <!-- Login Screen -->
-  <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-    <div id="login-card" class="w-full max-w-md bg-gray-900/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-700 p-8 text-gray-100 animate-login-in">
-      <div class="mb-6 text-center">
-        <div class="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-indigo-500 mb-3">
-          <span class="text-xl font-bold">A</span>
-        </div>
-        <h1 class="text-2xl font-semibold">Admin Portal</h1>
-        <p class="text-sm text-gray-400 mt-1">Sign in to access the admin panel</p>
+<div id="login-screen" class="min-h-screen flex items-center justify-center px-4">
+  <div id="login-card" class="w-full max-w-md glass-strong rounded-2xl shadow-2xl border border-white/6 p-8 animate-login-in">
+    <div class="mb-6 text-center">
+      <div class="inline-flex items-center justify-center h-14 w-14 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 mb-3 text-white text-xl font-bold shadow-lg">
+        A
       </div>
-
-      <form id="login-form" class="space-y-4">
-        <div>
-          <label for="key-file" class="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wide">
-            Key file
-          </label>
-          <input
-            id="key-file"
-            name="key-file"
-            type="file"
-            accept=".txt"
-            class="block w-full text-sm text-gray-300
-                   file:mr-4 file:py-2 file:px-4
-                   file:rounded-md file:border-0
-                   file:text-sm file:font-semibold
-                   file:bg-indigo-600 file:text-white
-                   hover:file:bg-indigo-700"
-            required
-          />
-          <p class="mt-2 text-[11px] text-gray-500">
-            Upload your <span class="font-semibold">.txt key</span>. The file contains your visual info and an access <span class="font-semibold">level</span> (1–3).
-          </p>
-        </div>
-
-        <button
-          type="submit"
-          class="w-full inline-flex items-center justify-center px-4 py-2.5 mt-2 rounded-md bg-indigo-600 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900"
-        >
-          Use key
-        </button>
-      </form>
-
-      <p class="mt-6 text-[11px] text-center text-gray-500">
-        Levels: <span class="font-semibold">1</span> = view only, <span class="font-semibold">2</span> = announcements, <span class="font-semibold">3</span> = full control.
-      </p>
+      <h1 class="text-2xl font-semibold">Admin Portal</h1>
+      <p class="text-sm text-white/70 mt-1">Sign in with your <span class="font-medium">.key</span> file</p>
     </div>
-  </div>
 
-  <!-- Admin App (hidden until login) -->
-  <div id="admin-app" class="min-h-screen flex hidden">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-gray-900 text-gray-100 flex flex-col">
-      <div class="h-16 flex items-center px-6 border-b border-gray-800">
-        <span class="text-xl font-semibold">Admin</span>
+    <form id="login-form" class="space-y-4">
+      <div>
+        <label for="key-file" class="block text-xs font-medium text-white/70 mb-1 uppercase tracking-wide">Key file</label>
+        <input id="key-file" name="key-file" type="file" accept=".key" class="block w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700" required>
+        <p class="mt-2 text-[12px] text-white/60">Upload your <span class="font-semibold">.key file</span>. Expiry and level are parsed from file content.</p>
       </div>
 
-      <nav class="flex-1 px-3 py-4 space-y-1">
-        <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-md bg-gray-800 text-white">
-          <span class="mr-3 h-2 w-2 rounded-full bg-green-400"></span>
-          Dashboard
-        </a>
-        <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white">
-          Users
-        </a>
-        <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white">
-          Orders
-        </a>
-        <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-800 hover:text-white">
-          Settings
-        </a>
-      </nav>
-
-      <div class="px-4 py-3 border-t border-gray-800 text-xs text-gray-400 space-y-1">
-        <div>
-          Logged in as<br />
-          <span id="current-user" class="font-medium text-gray-200">User</span>
-        </div>
-        <div>
-          Level: <span id="current-level" class="font-semibold text-indigo-400">1</span>
-        </div>
+      <div class="flex gap-3">
+        <button id="login-button" type="submit" class="flex-1 px-4 py-2.5 rounded-md bg-indigo-600 text-sm font-medium text-white hover:bg-indigo-700">Use key</button>
+        <button id="remember-checkbox" type="button" class="px-3 py-2 rounded-md bg-white/6 text-white text-sm">Remember</button>
       </div>
-    </aside>
+    </form>
 
-    <!-- Main content -->
-    <div class="flex-1 flex flex-col">
-      <!-- Top bar -->
-      <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-        <h1 class="text-lg font-semibold tracking-tight">Dashboard</h1>
-        <div class="flex items-center space-x-4">
-          <div class="relative">
-            <input
-              type="text"
-              placeholder="Search..."
-              class="pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-            <span class="absolute left-2 top-1.5 text-gray-400 text-xs">🔍</span>
-          </div>
-          <button class="relative inline-flex items-center justify-center h-9 w-9 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200">
-            🔔
-            <span class="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium leading-none text-white bg-red-500 rounded-full">
-              3
-            </span>
-          </button>
-          <div class="flex items-center space-x-2">
-            <div class="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-semibold">
-              <span id="avatar-initials">AD</span>
-            </div>
-            <span id="topbar-user" class="text-sm font-medium text-gray-700 hidden sm:inline">Admin</span>
-            <button
-              id="logout-btn"
-              class="ml-2 text-xs text-gray-500 hover:text-red-600 border border-gray-300 rounded-md px-2 py-1"
-            >
-              Log out
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <!-- Content area -->
-      <main class="flex-1 p-6 space-y-6 overflow-y-auto">
-        <!-- Stats cards -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-            <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Users</div>
-            <div class="mt-2 flex items-baseline justify-between">
-              <div class="text-2xl font-semibold">1,245</div>
-              <span class="text-xs text-green-600 font-medium">+12% this week</span>
-            </div>
-          </div>
-
-          <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-            <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Active Sessions</div>
-            <div class="mt-2 flex items-baseline justify-between">
-              <div class="text-2xl font-semibold">87</div>
-              <span class="text-xs text-green-600 font-medium">+5% today</span>
-            </div>
-          </div>
-
-          <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-            <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">New Orders</div>
-            <div class="mt-2 flex items-baseline justify-between">
-              <div class="text-2xl font-semibold">32</div>
-              <span class="text-xs text-red-600 font-medium">-3% this week</span>
-            </div>
-          </div>
-
-          <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-            <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Revenue</div>
-            <div class="mt-2 flex items-baseline justify-between">
-              <div class="text-2xl font-semibold">$12,430</div>
-              <span class="text-xs text-green-600 font-medium">+8% this month</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- Main grid: table + side panel -->
-        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <!-- Table -->
-          <div class="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-              <h2 class="text-sm font-semibold text-gray-800">Recent Users</h2>
-              <button
-                class="inline-flex items-center px-3 py-1.5 rounded-md bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700"
-                data-min-level="3"
-              >
-                + Add User
-              </button>
-            </div>
-            <div class="overflow-x-auto">
-              <table class="min-w-full text-sm">
-                <thead class="bg-gray-50 border-b border-gray-100">
-                  <tr>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th class="px-4 py-2"></th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                  <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-2 whitespace-nowrap font-medium text-gray-800">Jane Doe</td>
-                    <td class="px-4 py-2 whitespace-nowrap text-gray-600">jane@example.com</td>
-                    <td class="px-4 py-2 whitespace-nowrap text-gray-600">Admin</td>
-                    <td class="px-4 py-2 whitespace-nowrap">
-                      <span class="inline-flex px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">
-                        Active
-                      </span>
-                    </td>
-                    <td class="px-4 py-2 text-right whitespace-nowrap">
-                      <button class="text-xs text-indigo-600 hover:underline mr-3" data-min-level="3">Edit</button>
-                      <button class="text-xs text-red-600 hover:underline" data-min-level="3">Delete</button>
-                    </td>
-                  </tr>
-                  <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-2 whitespace-nowrap font-medium text-gray-800">John Smith</td>
-                    <td class="px-4 py-2 whitespace-nowrap text-gray-600">john@example.com</td>
-                    <td class="px-4 py-2 whitespace-nowrap text-gray-600">User</td>
-                    <td class="px-4 py-2 whitespace-nowrap">
-                      <span class="inline-flex px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-700">
-                        Pending
-                      </span>
-                    </td>
-                    <td class="px-4 py-2 text-right whitespace-nowrap">
-                      <button class="text-xs text-indigo-600 hover:underline mr-3">Edit</button>
-                      <button class="text-xs text-red-600 hover:underline">Delete</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Side panel / activity -->
-          <div class="space-y-6">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-              <h2 class="text-sm font-semibold text-gray-800 mb-3">Quick Actions</h2>
-              <div class="space-y-2">
-                <button
-                  class="w-full inline-flex items-center justify-between px-3 py-2 rounded-md bg-gray-50 text-xs text-gray-800 hover:bg-gray-100"
-                  data-min-level="3"
-                >
-                  Create New User
-                  <span class="text-gray-400">→</span>
-                </button>
-                <button
-                  onclick="openAnnouncementModal()"
-                  class="w-full inline-flex items-center justify-between px-3 py-2 rounded-md bg-gray-50 text-xs text-gray-800 hover:bg-gray-100 transition-colors"
-                  data-min-level="2"
-                >
-                  Post Announcement
-                  <span class="text-gray-400">→</span>
-                </button>
-                <button
-                  class="w-full inline-flex items-center justify-between px-3 py-2 rounded-md bg-gray-50 text-xs text-gray-800 hover:bg-gray-100"
-                  data-min-level="3"
-                >
-                  System Settings
-                  <span class="text-gray-400">→</span>
-                </button>
-              </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-              <h2 class="text-sm font-semibold text-gray-800 mb-3">Recent Activity</h2>
-              <ul class="space-y-3 text-xs text-gray-600">
-                <li class="flex items-start">
-                  <span class="mt-0.5 mr-2 h-1.5 w-1.5 rounded-full bg-green-500"></span>
-                  <div>
-                    <span class="font-medium text-gray-800">Jane Doe</span> updated profile.
-                    <div class="text-gray-400 text-[11px]">2 minutes ago</div>
-                  </div>
-                </li>
-                <li class="flex items-start">
-                  <span class="mt-0.5 mr-2 h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
-                  <div>
-                    New user <span class="font-medium text-gray-800">John Smith</span> registered.
-                    <div class="text-gray-400 text-[11px]">15 minutes ago</div>
-                  </div>
-                </li>
-                <li class="flex items-start">
-                  <span class="mt-0.5 mr-2 h-1.5 w-1.5 rounded-full bg-yellow-500"></span>
-                  <div>
-                    Server maintenance scheduled.
-                    <div class="text-gray-400 text-[11px]">Tomorrow 01:00 UTC</div>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </section>
-      </main>
-    </div>
+    <p class="mt-6 text-[12px] text-center text-white/60">Levels: <b>1</b> = view only, <b>2</b> = announcements, <b>3</b> = full control</p>
   </div>
-  <div id="announcement-modal" class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center backdrop-blur-sm">
-    <div class="bg-white p-6 rounded-xl w-96 shadow-2xl border border-gray-200">
-      <h3 class="text-lg font-bold mb-4 text-gray-800">Post New Announcement</h3>
-    
-      <textarea id="announcement-text" class="w-full border border-gray-300 p-3 rounded-lg mb-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" rows="4" placeholder="Type your message here..."></textarea>
-    
-      <div class="flex justify-end gap-2">
-        <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md transition-colors">Cancel</button>
-        <button onclick="sendAnnouncement()" class="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors font-medium">Post Live</button>
-      </div>
-    </div>
-  </div>
-  <!-- Key-based login logic -->
-  <script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
-    // TODO: Add SDKs for Firebase products that you want to use
-    // https://firebase.google.com/docs/web/setup#available-libraries
+</div>
 
-    // Your web app's Firebase configuration
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-    const firebaseConfig = {
-      apiKey: "AIzaSyDWGcagecOrdCn7BuBeA72ICFkeH7QWePc",
-      authDomain: "nexus-hub-caeab.firebaseapp.com",
-      databaseURL: "https://nexus-hub-caeab-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "nexus-hub-caeab",
-      storageBucket: "nexus-hub-caeab.firebasestorage.app",
-      messagingSenderId: "45490042276",
-      appId: "1:45490042276:web:5dd49816f386fc23193d31",
-      measurementId: "G-MM3NHNWYZX"
-    };
+<div id="admin-app" class="min-h-screen hidden flex">
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    window.openAnnouncementModal = function() {
-    // Check if user is at least Level 2 (using your existing variable)
-    if (typeof userLevel !== 'undefined' && userLevel >= 2) {
-      document.getElementById('announcement-modal').classList.remove('hidden');
-    } else {
-      alert("Access Denied: You need Level 2 or higher to post announcements.");
-    }
-  }
-
-  // Function to close the popup
-  window.closeModal = function() {
-    document.getElementById('announcement-modal').classList.add('hidden');
-    document.getElementById('announcement-text').value = ""; // Clear text
-  }
-
-  // Function to SEND data to Firebase
-  window.sendAnnouncement = function() {
-    const text = document.getElementById('announcement-text').value;
   
-    if (!text) return alert("Please type a message!");
+  <aside id="sidebar" class="w-72 hidden md:flex flex-col glass p-4 border-r border-white/4">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <div class="text-lg font-semibold">Admin</div>
+        <div class="text-xs text-white/60">Control center</div>
+      </div>
+      <button id="collapse-sidebar" class="text-sm px-2 py-1 rounded bg-white/6">Collapse</button>
+    </div>
 
-    // This saves the data to the cloud
-    set(ref(db, 'announcement'), {
-      message: text,
-      timestamp: Date.now()
-    }).then(() => {
-      alert('Announcement updated on all screens!');
-      closeModal();
-    }).catch((error) => {
-      alert('Error: ' + error.message);
+    <div class="mb-4">
+      <input id="sidebar-search" type="search" placeholder="Search menu..." class="w-full px-3 py-2 rounded-md bg-white/4 text-sm placeholder-white/60" />
+    </div>
+
+    <nav id="nav-links" class="flex-1 space-y-2 text-sm">
+      <a href="#" class="block px-3 py-2 rounded-md bg-white/4">Dashboard</a>
+      <a href="#" class="block px-3 py-2 rounded-md">Users</a>
+      <a href="#" class="block px-3 py-2 rounded-md">Orders</a>
+      <a href="#" class="block px-3 py-2 rounded-md">Settings</a>
+      <a href="#" class="block px-3 py-2 rounded-md" data-min-level="2">Announcements</a>
+      <a href="#" class="block px-3 py-2 rounded-md" id="open-activity-link">Activity Log</a>
+    </nav>
+
+    <div class="mt-4 text-xs text-white/60">
+      Logged in as<br>
+      <span id="current-user" class="font-medium text-white">User</span><br>
+      Level: <span id="current-level" class="font-semibold text-indigo-300">1</span>
+    </div>
+  </aside>
+
+  
+  <div id="mobile-header" class="md:hidden w-full bg-transparent glass p-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button id="mobile-menu-btn" class="p-2 rounded-md bg-white/6">
+        ☰
+      </button>
+      <div class="text-lg font-semibold">Admin</div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="mobile-notif-btn" class="p-2 rounded-md bg-white/6">🔔</button>
+      <div id="mobile-avatar" class="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-semibold">AD</div>
+    </div>
+  </div>
+
+  
+  <div class="flex-1 flex flex-col">
+
+    
+    <header class="h-16 bg-white/6 border-b border-white/4 flex items-center justify-between px-6 glass">
+      <div class="flex items-center gap-4">
+        <button id="sidebar-toggle" class="hidden md:inline-flex items-center justify-center p-2 rounded-md bg-white/6">☰</button>
+        <h1 class="text-lg font-semibold">Dashboard</h1>
+        <div class="text-xs text-white/60 ml-2">Modern Glass UI</div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="relative">
+          <input id="global-search" type="search" placeholder="Search..." class="w-72 px-3 py-2 rounded-md bg-white/4 text-sm placeholder-white/60" />
+          <button id="search-clear" class="absolute right-1 top-1/2 -translate-y-1/2 text-xs px-2 py-1 rounded bg-white/6 hidden">Clear</button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="theme-toggle" class="px-3 py-1 rounded-md bg-white/6 text-sm">Dark</button>
+          <div id="avatar-initials" class="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-semibold">AD</div>
+          <span id="topbar-user" class="text-sm font-medium">Admin</span>
+          <button id="logout-btn" class="text-xs text-white/60 hover:text-red-400 border border-white/6 rounded-md px-2 py-1">Log out</button>
+        </div>
+      </div>
+    </header>
+
+    
+    <main class="flex-1 p-6 space-y-6 overflow-auto">
+
+      
+      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white/6 rounded-lg glass p-4 border border-white/5">
+          <div class="text-xs uppercase text-white/50">Total Users</div>
+          <div class="text-2xl font-semibold mt-1">1,200</div>
+        </div>
+
+        <div class="bg-white/6 rounded-lg glass p-4 border border-white/5">
+          <div class="text-xs uppercase text-white/50">Active Sessions</div>
+          <div class="text-2xl font-semibold mt-1">85</div>
+        </div>
+
+        <div class="bg-white/6 rounded-lg glass p-4 border border-white/5">
+          <div class="text-xs uppercase text-white/50">New Orders</div>
+          <div class="text-2xl font-semibold mt-1">32</div>
+        </div>
+
+        <div class="bg-white/6 rounded-lg glass p-4 border border-white/5">
+          <div class="text-xs uppercase text-white/50">Revenue</div>
+          <div class="text-2xl font-semibold mt-1">$12,430</div>
+        </div>
+      </section>
+
+      
+      <section class="bg-white/6 rounded-lg glass p-4 border border-white/5">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-white/90 mb-2">Announcements</h2>
+          <div class="flex items-center gap-2">
+            <button id="post-ann-btn" data-min-level="2" class="px-3 py-1.5 rounded-md bg-indigo-600 text-white text-xs hover:bg-indigo-700">+ Post Announcement</button>
+            <button id="refresh-ann" class="px-2 py-1 rounded-md bg-white/6 text-xs">Refresh</button>
+          </div>
+        </div>
+
+        <div id="announcements-list" class="mt-4 space-y-3 text-sm text-white/80 max-h-48 overflow-auto">
+          
+        </div>
+      </section>
+
+      
+      <section class="bg-white/6 rounded-lg glass p-4 border border-white/5">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-semibold">Activity (recent)</h3>
+          <button id="open-activity" class="px-3 py-1 rounded-md bg-white/6 text-sm">View full</button>
+        </div>
+
+        <ul id="activity-preview" class="mt-3 text-sm text-white/80 space-y-2 max-h-36 overflow-auto"></ul>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<div id="announcement-modal" class="fixed inset-0 z-50 hidden items-center justify-center px-4">
+  <div class="bg-white/5 glass-strong rounded-xl w-full max-w-lg shadow-2xl p-6">
+    <h3 class="text-lg font-bold mb-3">Post New Announcement</h3>
+    <textarea id="announcement-text" rows="4" class="w-full rounded-md p-3 bg-white/6 text-sm" placeholder="Write your announcement..."></textarea>
+
+    <div class="flex justify-end gap-2 mt-4">
+      <button onclick="closeAnnouncementModal()" class="px-4 py-2 rounded-md bg-white/6">Cancel</button>
+      <button id="announcement-post" class="px-4 py-2 rounded-md bg-indigo-600 text-white">Post</button>
+    </div>
+  </div>
+</div>
+
+<div id="activity-modal" class="fixed inset-0 z-50 hidden items-center justify-center px-4">
+  <div class="bg-white/5 glass-strong rounded-xl w-full max-w-2xl shadow-2xl p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold">Activity Log</h3>
+      <div class="flex items-center gap-2">
+        <button id="activity-clear" class="px-3 py-1 rounded-md bg-white/6 text-sm">Clear</button>
+        <button onclick="closeActivityModal()" class="px-3 py-1 rounded-md bg-white/6 text-sm">Close</button>
+      </div>
+    </div>
+    <div id="activity-list" class="max-h-96 overflow-auto space-y-2 text-sm text-white/80"></div>
+  </div>
+</div>
+
+<script type="module">
+
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue, push, update } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDWGcagecOrdCn7BuBeA72ICFkeH7QWePc",
+    authDomain: "nexus-hub-caeab.firebaseapp.com",
+    databaseURL: "https://nexus-hub-caeab-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "nexus-hub-caeab",
+    storageBucket: "nexus-hub-caeab.firebasestorage.app",
+    messagingSenderId: "45490042276",
+    appId: "1:45490042276:web:5dd49816f386fc23193d31",
+    measurementId: "G-MM3NHNWYZX"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  function showToast(message, opts = {}) {
+    const container = document.getElementById('toast-container');
+    const el = document.createElement('div');
+    el.className = 'glass px-4 py-2 rounded shadow-lg text-sm text-white/95 toast-enter';
+    el.style.minWidth = '180px';
+    el.innerHTML = `<div>${message}</div>`;
+    container.appendChild(el);
+
+    requestAnimationFrame(() => el.classList.add('toast-show'));
+    const time = opts.duration ?? 4000;
+    const timeout = setTimeout(() => {
+      el.classList.remove('toast-show');
+      setTimeout(() => el.remove(), 300);
+    }, time);
+    el.addEventListener('click', () => {
+      clearTimeout(timeout);
+      el.remove();
     });
   }
 
-    const loginForm = document.getElementById('login-form');
-    const loginScreen = document.getElementById('login-screen');
-    const loginCard = document.getElementById('login-card');
-    const adminApp = document.getElementById('admin-app');
-    const currentUser = document.getElementById('current-user');
-    const currentLevel = document.getElementById('current-level');
-    const topbarUser = document.getElementById('topbar-user');
-    const avatarInitials = document.getElementById('avatar-initials');
-    const logoutBtn = document.getElementById('logout-btn');
-    const errorOverlay = document.getElementById('error-overlay');
-    const errorOverlayClose = document.getElementById('error-overlay-close');
-    const keyFileInput = document.getElementById('key-file');
+  function parseKeyFileContent(text) {
+    const levelMatch = text.match(/level\s*[:=]\s*([1-3])/i);
+    const level = levelMatch ? parseInt(levelMatch[1]) : null;
 
-    let userLevel = 1;
+    const expiryMatch = text.match(/(?:expiry|expiration)[-_ ]?date[:=]\s*(\d{4}-\d{2}-\d{2})/i);
+    const expiry = expiryMatch ? expiryMatch[1] : null;
 
-    function parseKeyFileContent(text) {
-      // Find a line containing "level" and a value 1-3
-      const levelMatch = text.match(/level\s*[:=]\s*([1-3])/i);
-      const level = levelMatch ? parseInt(levelMatch[1], 10) : 1;
+    const lines = text.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
 
-      // Everything else can be used for visuals - take the first non-empty non-level line as the display name
-      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-      let displayName = 'User';
-      for (const line of lines) {
-        if (/level\s*[:=]/i.test(line)) continue;
-        displayName = line;
-        break;
-      }
+    const plain = lines.filter(l => !/level\s*[:=]|expiry|expiration/i.test(l));
+    const displayName = (plain[0] && !/^\s*$/i.test(plain[0])) ? plain[0] : 'User';
+    return { displayName, level, expiry };
+  }
 
-      return { displayName, level: Math.min(Math.max(level, 1), 3) };
+  function dateAtMidnight(str) {
+    const m = str && str.match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return null;
+    return new Date(m[1], parseInt(m[2],10)-1, m[3]);
+  }
+
+  const loginForm = document.getElementById('login-form');
+  const keyFileInput = document.getElementById('key-file');
+  const loadingOverlay = document.getElementById('loading-overlay');
+  const errorOverlay = document.getElementById('error-overlay');
+  const errorReason = document.getElementById('error-reason');
+  const errorTitle = document.getElementById('error-title');
+
+  let userLevel = 1;
+  let currentUser = 'User';
+  let activity = []; 
+
+  function addActivity(entry, pushToFirebase = true) {
+    const timestamp = Date.now();
+    const item = { timestamp, text: entry };
+    activity.unshift(item);
+
+    if (activity.length > 200) activity.length = 200;
+    renderActivityPreview();
+
+    if (pushToFirebase) {
+      const node = push(ref(db, 'activity'));
+      set(node, item).catch(e => console.error('Failed to push activity', e));
     }
+  }
 
-    function applyLevelPermissions(level) {
-      // Update little badge
-      if (currentLevel) {
-        currentLevel.textContent = String(level);
+  function renderActivityPreview() {
+    const ul = document.getElementById('activity-preview');
+    ul.innerHTML = '';
+    activity.slice(0,6).forEach(a => {
+      const li = document.createElement('li');
+      const time = new Date(a.timestamp).toLocaleTimeString();
+      li.className = 'px-3 py-2 rounded bg-white/3';
+      li.textContent = `${time} — ${a.text}`;
+      ul.appendChild(li);
+    });
+  }
+
+  function showError(msg, title = 'Access denied') {
+    errorTitle.textContent = title;
+    errorReason.textContent = msg;
+    errorOverlay.classList.remove('hidden');
+  }
+  document.getElementById('error-overlay-close').onclick = () => errorOverlay.classList.add('hidden');
+
+  function applyLevelPermissions(level) {
+    document.querySelectorAll('[data-min-level]').forEach(el => {
+      const req = parseInt(el.getAttribute('data-min-level') || '1', 10);
+      if (level < req) {
+
+        el.classList.add('perm-disabled');
+        el.setAttribute('aria-disabled', 'true');
+        el.disabled = true;
+      } else {
+        el.classList.remove('perm-disabled');
+        el.removeAttribute('aria-disabled');
+        el.disabled = false;
       }
+    });
+  }
 
-      // Disable actions the user is not allowed to use
-      const privileged = document.querySelectorAll('[data-min-level]');
-      privileged.forEach(el => {
-        const min = parseInt(el.getAttribute('data-min-level') || '1', 10);
-        if (Number.isNaN(min)) return;
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const file = keyFileInput.files[0];
+    if (!file) return showError('Please select a .key file.');
+    if (!file.name.toLowerCase().endsWith('.key')) return showError('The uploaded file is not a .key file.');
 
-        if (level < min) {
-          el.classList.add('opacity-50', 'pointer-events-none', 'cursor-not-allowed');
-          el.setAttribute('title', 'Insufficient permissions for your level');
-        } else {
-          el.classList.remove('opacity-50', 'pointer-events-none', 'cursor-not-allowed');
-          el.removeAttribute('title');
+    loadingOverlay.classList.remove('hidden');
+    addActivity('Attempting sign in (reading file)', false);
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const text = String(evt.target.result || '');
+        const { displayName, level, expiry } = parseKeyFileContent(text);
+
+        if (!level) {
+          loadingOverlay.classList.add('hidden');
+          showError('Invalid key file (missing level).');
+          return;
         }
-      });
-    }
 
-    function completeLogin(displayName, level) {
-      userLevel = level;
-
-      currentUser.textContent = displayName;
-      topbarUser.textContent = displayName;
-      avatarInitials.textContent = displayName
-        .split(' ')
-        .map(part => part[0]?.toUpperCase())
-        .join('')
-        .slice(0, 2) || 'US';
-
-      applyLevelPermissions(level);
-
-      // Play a quick exit animation on the login card, then fade in the admin app
-      loginCard.classList.remove('animate-login-in');
-      loginCard.classList.add('animate-login-out');
-
-      const handleAnimationEnd = (event) => {
-        if (event.target !== loginCard) return;
-
-        loginCard.classList.remove('animate-login-out');
-        loginScreen.classList.add('hidden');
-        adminApp.classList.remove('hidden');
-        adminApp.classList.add('animate-admin-in');
-
-        loginCard.removeEventListener('animationend', handleAnimationEnd);
-      };
-
-      loginCard.addEventListener('animationend', handleAnimationEnd);
-    }
-
-    function showErrorOverlay() {
-      if (errorOverlay) {
-        errorOverlay.classList.remove('hidden');
-      }
-    }
-
-    if (errorOverlayClose && errorOverlay) {
-      errorOverlayClose.addEventListener('click', () => {
-        errorOverlay.classList.add('hidden');
-      });
-    }
-
-    loginForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-
-      const file = keyFileInput.files[0];
-      if (!file) {
-        showErrorOverlay();
-        return;
-      }
-
-      const reader = new FileReader();
-
-      reader.onload = (event) => {
-        try {
-          const text = String(event.target.result || '');
-          const { displayName, level } = parseKeyFileContent(text);
-
-          // If the level wasn't found at all, treat as invalid key
-          if (!/level\s*[:=]\s*[1-3]/i.test(text)) {
-            showErrorOverlay();
+        if (expiry) {
+          const exp = dateAtMidnight(expiry);
+          const today = new Date();
+          const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+          if (exp && todayMid > exp) {
+            loadingOverlay.classList.add('hidden');
+            showError(`Key expired on ${exp.toLocaleDateString()}.`);
             return;
           }
-
-          completeLogin(displayName, level);
-        } catch (err) {
-          console.error('Error reading key file', err);
-          showErrorOverlay();
         }
-      };
 
-      reader.onerror = () => {
-        showErrorOverlay();
-      };
+        await new Promise(r => setTimeout(r, 500));
 
-      reader.readAsText(file);
-    });
+        completeLogin(displayName, level);
+        showToast(`Welcome, ${displayName}`);
+        addActivity(`Signed in as ${displayName}`);
 
-    logoutBtn.addEventListener('click', function () {
-      // Hide admin app and reset its entrance animation
-      adminApp.classList.add('hidden');
-      adminApp.classList.remove('animate-admin-in');
+        loadingOverlay.classList.add('hidden');
+      } catch (err) {
+        loadingOverlay.classList.add('hidden');
+        showError('Unable to read key file.');
+      }
+    };
 
-      // Show login screen and replay the entrance animation on the card
-      loginScreen.classList.remove('hidden');
-      loginForm.reset();
-      userLevel = 1;
-      applyLevelPermissions(userLevel);
-      currentUser.textContent = 'User';
-      topbarUser.textContent = 'User';
-      avatarInitials.textContent = 'US';
+    reader.onerror = () => {
+      loadingOverlay.classList.add('hidden');
+      showError('Unable to read key file.');
+    };
 
+    reader.readAsText(file);
+  });
+
+  function completeLogin(name, level) {
+    userLevel = level;
+    currentUser = name;
+
+    document.getElementById('current-user').textContent = name;
+    document.getElementById('current-level').textContent = level;
+    document.getElementById('topbar-user').textContent = name;
+    document.getElementById('avatar-initials').textContent = name.substring(0,2).toUpperCase();
+    document.getElementById('mobile-avatar').textContent = name.substring(0,2).toUpperCase();
+
+    applyLevelPermissions(level);
+
+    const loginCard = document.getElementById('login-card');
+    const loginScreen = document.getElementById('login-screen');
+    const adminApp = document.getElementById('admin-app');
+
+    loginCard.classList.add('animate-login-out');
+    setTimeout(() => {
+      loginScreen.classList.add('hidden');
       loginCard.classList.remove('animate-login-out');
-      void loginCard.offsetWidth; // restart animation
-      loginCard.classList.add('animate-login-in');
+      adminApp.classList.remove('hidden');
+      adminApp.classList.add('animate-admin-in');
+
+      document.getElementById('global-search').focus();
+    }, 420);
+  }
+
+  document.getElementById('logout-btn').onclick = () => {
+    document.getElementById('admin-app').classList.add('hidden');
+    document.getElementById('login-screen').classList.remove('hidden');
+    loginForm.reset();
+    userLevel = 1;
+    applyLevelPermissions(1);
+    addActivity('Logged out');
+    showToast('Signed out');
+  };
+
+  const annListEl = document.getElementById('announcements-list');
+  function renderAnnouncements(snapshotData) {
+    annListEl.innerHTML = '';
+
+    if (!snapshotData) {
+      annListEl.innerHTML = '<div class="text-sm text-white/50">No announcements yet.</div>';
+      return;
+    }
+
+    const arr = Object.keys(snapshotData).map(k => ({ id: k, ...snapshotData[k] }));
+    arr.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+    arr.forEach(a => {
+      const wrap = document.createElement('div');
+      wrap.className = 'p-3 rounded bg-white/3';
+      const time = new Date(a.timestamp).toLocaleString();
+      wrap.innerHTML = `<div class="font-medium">${a.title ?? 'Announcement'}</div>
+                        <div class="text-xs text-white/70">${a.message}</div>
+                        <div class="text-[11px] text-white/60 mt-1">${time}</div>`;
+      annListEl.appendChild(wrap);
     });
-  </script>
+  }
+
+  onValue(ref(db, 'announcements'), (snap) => {
+    const val = snap.val();
+    renderAnnouncements(val);
+    showToast('Announcements updated', { duration: 2200 });
+  }, (err) => {
+    console.warn('ann listener error', err);
+  });
+
+  const annModal = document.getElementById('announcement-modal');
+  const annText = document.getElementById('announcement-text');
+  const postAnnBtn = document.getElementById('post-ann-btn');
+  const annPost = document.getElementById('announcement-post');
+
+  window.openAnnouncementModal = () => {
+    if (userLevel < 2) {
+      showToast('You need level 2 to post announcements');
+      addActivity('Announcement attempt blocked (insufficient level)');
+      return;
+    }
+    annModal.classList.remove('hidden');
+    annText.focus();
+  };
+
+  function closeAnnouncementModal() {
+    annModal.classList.add('hidden');
+    annText.value = '';
+  }
+  window.closeAnnouncementModal = closeAnnouncementModal;
+
+  postAnnBtn.addEventListener('click', openAnnouncementModal);
+
+  annPost.addEventListener('click', async () => {
+    if (userLevel < 2) {
+      showToast('Permission denied');
+      return;
+    }
+    const text = annText.value.trim();
+    if (!text) {
+      showToast('Type a message first');
+      return;
+    }
+
+    const node = push(ref(db, 'announcements'));
+    const payload = {
+      title: `${currentUser}`,
+      message: text,
+      timestamp: Date.now()
+    };
+    set(node, payload).then(() => {
+      showToast('Announcement posted');
+      addActivity(`Posted announcement: ${text}`);
+      closeAnnouncementModal();
+    }).catch(err => {
+      showError('Failed to post announcement: ' + (err.message || err));
+    });
+  });
+
+  document.getElementById('refresh-ann').addEventListener('click', () => {
+
+    onValue(ref(db, 'announcements'), (snap) => {
+      renderAnnouncements(snap.val());
+      showToast('Announcements refreshed', { duration: 1600 });
+    }, { onlyOnce: true });
+  });
+
+  const activityModal = document.getElementById('activity-modal');
+  function openActivityModal() {
+    activityModal.classList.remove('hidden');
+    renderActivityFull();
+  }
+  function closeActivityModal() {
+    activityModal.classList.add('hidden');
+  }
+  document.getElementById('open-activity').addEventListener('click', openActivityModal);
+  document.getElementById('open-activity-link').addEventListener('click', openActivityModal);
+  document.getElementById('activity-clear').addEventListener('click', () => {
+    activity = [];
+    document.getElementById('activity-list').innerHTML = '';
+
+    showToast('Local activity cleared');
+  });
+
+  function renderActivityFull() {
+    const list = document.getElementById('activity-list');
+    list.innerHTML = '';
+    if (!activity.length) {
+      list.innerHTML = '<div class="text-sm text-white/60">No recent activity</div>';
+      return;
+    }
+    activity.forEach(a => {
+      const el = document.createElement('div');
+      el.className = 'p-2 rounded bg-white/3';
+      el.innerHTML = `<div class="text-xs text-white/70">${new Date(a.timestamp).toLocaleString()}</div>
+                      <div class="text-sm">${a.text}</div>`;
+      list.appendChild(el);
+    });
+  }
+
+  document.getElementById('sidebar-search').addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    const links = document.querySelectorAll('#nav-links a');
+    links.forEach(a => {
+      const txt = a.textContent.trim().toLowerCase();
+      a.style.display = txt.includes(q) ? 'block' : 'none';
+    });
+  });
+
+  const globalSearch = document.getElementById('global-search');
+  const searchClear = document.getElementById('search-clear');
+  globalSearch.addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    searchClear.classList.toggle('hidden', !q);
+
+    document.querySelectorAll('main section:first-child > div').forEach(card => {
+      const txt = card.textContent.toLowerCase();
+      card.style.display = q && !txt.includes(q) ? 'none' : '';
+    });
+  });
+  searchClear.addEventListener('click', () => { globalSearch.value=''; globalSearch.dispatchEvent(new Event('input')); });
+
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  const sidebar = document.getElementById('sidebar');
+  mobileMenuBtn.addEventListener('click', () => {
+    const isHidden = sidebar.classList.toggle('hidden');
+    if (!sidebar.classList.contains('hidden')) {
+
+      sidebar.style.position = 'absolute';
+      sidebar.style.zIndex = 60;
+      sidebar.classList.remove('hidden');
+    } else {
+      sidebar.style.position = '';
+      sidebar.style.zIndex = '';
+    }
+  });
+
+  document.getElementById('collapse-sidebar').addEventListener('click', () => {
+    sidebar.classList.toggle('w-24');
+    sidebar.querySelectorAll('a').forEach(a => a.classList.toggle('text-sm'));
+  });
+
+  const themeToggle = document.getElementById('theme-toggle');
+  function setTheme(dark) {
+    if (dark) {
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('bg-gray-900');
+      themeToggle.textContent = 'Light';
+      localStorage.setItem('pref-dark','1');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('bg-gray-900');
+      themeToggle.textContent = 'Dark';
+      localStorage.removeItem('pref-dark');
+    }
+  }
+
+  setTheme(!!localStorage.getItem('pref-dark'));
+  themeToggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
+
+  addActivity('App loaded', false);
+  onValue(ref(db, 'activity'), (snap) => {
+
+    const v = snap.val();
+    if (v) {
+
+      const keys = Object.keys(v);
+      if (keys.length) {
+
+        const latest = v[keys[keys.length - 1]];
+        if (latest && latest.text && latest.timestamp) {
+
+          activity.unshift(latest);
+          if (activity.length > 200) activity.length = 200;
+          renderActivityPreview();
+        }
+      }
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    const el = e.target;
+    if (el && el.closest && el.closest('.perm-disabled')) {
+      e.preventDefault();
+      showToast('Insufficient permission for that action');
+    }
+  });
+
+  onValue(ref(db, 'announcements'), (snap) => {
+    renderAnnouncements(snap.val());
+  }, { onlyOnce: true });
+
+</script>
 </body>
 </html>
