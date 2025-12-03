@@ -1,684 +1,975 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Admin Panel — Modern Glass UI</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
+  <!doctype html>
+  <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Panel</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
 
-    :root {
-      --glass-bg: rgba(255,255,255,0.06);
-      --glass-border: rgba(255,255,255,0.08);
-      --glass-card: rgba(255,255,255,0.04);
-      --glass-text: rgba(255,255,255,0.95);
-    }
+      :root {
+        --glass-bg: rgba(255,255,255,0.06);
+        --glass-border: rgba(255,255,255,0.08);
+        --glass-card: rgba(255,255,255,0.04);
+        --glass-text: rgba(255,255,255,0.95);
+      }
 
-    .glass {
-      background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-      border: 1px solid rgba(255,255,255,0.06);
-      backdrop-filter: blur(8px) saturate(120%);
-    }
+      .glass {
+        background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+        border: 1px solid rgba(255,255,255,0.06);
+        backdrop-filter: blur(8px) saturate(120%);
+      }
 
-    .glass-strong {
-      background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-      border: 1px solid rgba(255,255,255,0.08);
-      backdrop-filter: blur(12px) saturate(140%);
-    }
+      .glass-strong {
+        background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+        border: 1px solid rgba(255,255,255,0.08);
+        backdrop-filter: blur(12px) saturate(140%);
+      }
 
-    .animate-login-in { animation: loginIn 0.6s cubic-bezier(.22,.61,.36,1) forwards;}
-    .animate-login-out { animation: loginOut 0.45s ease forwards;}
-    .animate-admin-in { animation: adminIn 0.48s ease forwards;}
+      .animate-login-in { animation: loginIn 0.6s cubic-bezier(.22,.61,.36,1) forwards;}
+      .animate-login-out { animation: loginOut 0.45s ease forwards;}
+      .animate-admin-in { animation: adminIn 0.48s ease forwards;}
 
-    @keyframes loginIn { from{opacity:0;transform:translateY(14px) scale(.99)} to{opacity:1;transform:none} }
-    @keyframes loginOut { from{opacity:1} to{opacity:0;transform:translateY(-8px) scale(.995)} }
-    @keyframes adminIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+      @keyframes loginIn { from{opacity:0;transform:translateY(14px) scale(.99)} to{opacity:1;transform:none} }
+      @keyframes loginOut { from{opacity:1} to{opacity:0;transform:translateY(-8px) scale(.995)} }
+      @keyframes adminIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
 
-    .spinner {
-      border: 4px solid rgba(255,255,255,0.06);
-      border-top-color: rgba(255,255,255,0.9);
-      border-radius: 9999px;
-      width: 44px;
-      height: 44px;
-      animation: spin 0.95s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+      .spinner {
+        border: 4px solid rgba(255,255,255,0.06);
+        border-top-color: rgba(255,255,255,0.9);
+        border-radius: 9999px;
+        width: 44px;
+        height: 44px;
+        animation: spin 0.95s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
 
-    .toast-enter { transform: translateY(10px); opacity: 0; transition: all .28s ease; }
-    .toast-show { transform: translateY(0); opacity: 1; }
+      .toast-enter { transform: translateY(10px); opacity: 0; transition: all .28s ease; }
+      .toast-show { transform: translateY(0); opacity: 1; }
 
-    .perm-disabled {
-      opacity: 0.45;
-      pointer-events: none;
-      filter: grayscale(.05);
-    }
+      .perm-disabled {
+        opacity: 0.45;
+        pointer-events: none;
+        filter: grayscale(.05);
+      }
 
-    [data-hidden="true"] { display: none !important; }
+      [data-hidden="true"] { display: none !important; }
 
-    .dark .glass { background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-color: rgba(255,255,255,0.03); }
-  </style>
-</head>
-<body class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100">
+      .dark .glass { background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-color: rgba(255,255,255,0.03); }
 
-<div id="loading-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60">
-  <div class="flex flex-col items-center gap-4">
-    <div class="spinner"></div>
-    <div class="text-sm text-gray-200">Reading key & signing in…</div>
-  </div>
-</div>
+      /* small helpers for buttons in lists */
+      .ann-btn { font-size: 11px; padding: 4px 8px; border-radius: 6px; }
+      .ann-btn-edit { background: rgba(255,255,255,0.06); }
+      .ann-btn-pin { background: rgba(255,255,255,0.06); }
+      .ann-btn-delete { background: rgba(255,60,60,0.12); color: #fff; }
 
-<div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-end"></div>
+      /* Scrollbar small */
+      ::-webkit-scrollbar { height:8px; width:8px; }
+      ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 8px; }
 
-<div id="error-overlay" class="fixed inset-0 z-40 hidden items-center justify-center px-4">
-  <div class="max-w-xl w-full glass-strong rounded-2xl shadow-2xl p-6 text-center">
-    <h2 id="error-title" class="text-xl font-semibold text-white/95 mb-2">Notice</h2>
-    <p id="error-reason" class="text-gray-200/80 mb-4"></p>
-    <div class="flex justify-center">
-      <button id="error-overlay-close" class="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">Close</button>
-    </div>
-  </div>
-</div>
+    </style>
+  </head>
+  <body class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100">
 
-<div id="login-screen" class="min-h-screen flex items-center justify-center px-4">
-  <div id="login-card" class="w-full max-w-md glass-strong rounded-2xl shadow-2xl border border-white/6 p-8 animate-login-in">
-    <div class="mb-6 text-center">
-      <div class="inline-flex items-center justify-center h-14 w-14 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 mb-3 text-white text-xl font-bold shadow-lg">
-        A
-      </div>
-      <h1 class="text-2xl font-semibold">Admin Portal</h1>
-      <p class="text-sm text-white/70 mt-1">Sign in with your <span class="font-medium">.key</span> file</p>
-    </div>
-
-    <form id="login-form" class="space-y-4">
-      <div>
-        <label for="key-file" class="block text-xs font-medium text-white/70 mb-1 uppercase tracking-wide">Key file</label>
-        <input id="key-file" name="key-file" type="file" accept=".key" class="block w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700" required>
-        <p class="mt-2 text-[12px] text-white/60">Upload your <span class="font-semibold">.key file</span>. Expiry and level are parsed from file content.</p>
-      </div>
-
-      <div class="flex gap-3">
-        <button id="login-button" type="submit" class="flex-1 px-4 py-2.5 rounded-md bg-indigo-600 text-sm font-medium text-white hover:bg-indigo-700">Use key</button>
-        <button id="remember-checkbox" type="button" class="px-3 py-2 rounded-md bg-white/6 text-white text-sm">Remember</button>
-      </div>
-    </form>
-
-    <p class="mt-6 text-[12px] text-center text-white/60">Levels: <b>1</b> = view only, <b>2</b> = announcements, <b>3</b> = full control</p>
-  </div>
-</div>
-
-<div id="admin-app" class="min-h-screen hidden flex">
-
-  
-  <aside id="sidebar" class="w-72 hidden md:flex flex-col glass p-4 border-r border-white/4">
-    <div class="flex items-center justify-between mb-4">
-      <div>
-        <div class="text-lg font-semibold">Admin</div>
-        <div class="text-xs text-white/60">Control center</div>
-      </div>
-      <button id="collapse-sidebar" class="text-sm px-2 py-1 rounded bg-white/6">Collapse</button>
-    </div>
-
-    <div class="mb-4">
-      <input id="sidebar-search" type="search" placeholder="Search menu..." class="w-full px-3 py-2 rounded-md bg-white/4 text-sm placeholder-white/60" />
-    </div>
-
-    <nav id="nav-links" class="flex-1 space-y-2 text-sm">
-      <a href="#" class="block px-3 py-2 rounded-md bg-white/4">Dashboard</a>
-      <a href="#" class="block px-3 py-2 rounded-md">Users</a>
-      <a href="#" class="block px-3 py-2 rounded-md">Orders</a>
-      <a href="#" class="block px-3 py-2 rounded-md">Settings</a>
-      <a href="#" class="block px-3 py-2 rounded-md" data-min-level="2">Announcements</a>
-      <a href="#" class="block px-3 py-2 rounded-md" id="open-activity-link">Activity Log</a>
-    </nav>
-
-    <div class="mt-4 text-xs text-white/60">
-      Logged in as<br>
-      <span id="current-user" class="font-medium text-white">User</span><br>
-      Level: <span id="current-level" class="font-semibold text-indigo-300">1</span>
-    </div>
-  </aside>
-
-  
-  <div id="mobile-header" class="md:hidden w-full bg-transparent glass p-3 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <button id="mobile-menu-btn" class="p-2 rounded-md bg-white/6">
-        ☰
-      </button>
-      <div class="text-lg font-semibold">Admin</div>
-    </div>
-    <div class="flex items-center gap-2">
-      <button id="mobile-notif-btn" class="p-2 rounded-md bg-white/6">🔔</button>
-      <div id="mobile-avatar" class="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-semibold">AD</div>
+  <div id="loading-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60">
+    <div class="flex flex-col items-center gap-4">
+      <div class="spinner"></div>
+      <div class="text-sm text-gray-200">Reading key & signing in…</div>
     </div>
   </div>
 
-  
-  <div class="flex-1 flex flex-col">
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-end"></div>
+
+  <div id="error-overlay" class="fixed inset-0 z-40 hidden items-center justify-center px-4">
+    <div class="max-w-xl w-full glass-strong rounded-2xl shadow-2xl p-6 text-center">
+      <h2 id="error-title" class="text-xl font-semibold text-white/95 mb-2">Notice</h2>
+      <p id="error-reason" class="text-gray-200/80 mb-4"></p>
+      <div class="flex justify-center">
+        <button id="error-overlay-close" class="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="login-screen" class="min-h-screen flex items-center justify-center px-4">
+    <div id="login-card" class="w-full max-w-md glass-strong rounded-2xl shadow-2xl border border-white/6 p-8 animate-login-in">
+      <div class="mb-6 text-center">
+        <div class="inline-flex items-center justify-center h-14 w-14 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 mb-3 text-white text-xl font-bold shadow-lg">
+          A
+        </div>
+        <h1 class="text-2xl font-semibold">Admin Portal</h1>
+        <p class="text-sm text-white/70 mt-1">Sign in with your <span class="font-medium">.key</span> file</p>
+      </div>
+
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label for="key-file" class="block text-xs font-medium text-white/70 mb-1 uppercase tracking-wide">Key file</label>
+          <input id="key-file" name="key-file" type="file" accept=".key" class="block w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700" required>
+          <p class="mt-2 text-[12px] text-white/60">Upload your <span class="font-semibold">.key file</span>. Expiry and level are parsed from file content.</p>
+        </div>
+
+        <div class="flex gap-3">
+          <button id="login-button" type="submit" class="flex-1 px-4 py-2.5 rounded-md bg-indigo-600 text-sm font-medium text-white hover:bg-indigo-700">Use key</button>
+          <button id="remember-checkbox" type="button" class="px-3 py-2 rounded-md bg-white/6 text-white text-sm">Remember</button>
+        </div>
+      </form>
+
+      <p class="mt-6 text-[12px] text-center text-white/60">Levels: <b>1</b> = view only, <b>2</b> = announcements, <b>3</b> = full control</p>
+    </div>
+  </div>
+
+  <div id="admin-app" class="min-h-screen hidden flex">
 
     
-    <header class="h-16 bg-white/6 border-b border-white/4 flex items-center justify-between px-6 glass">
-      <div class="flex items-center gap-4">
-        <button id="sidebar-toggle" class="hidden md:inline-flex items-center justify-center p-2 rounded-md bg-white/6">☰</button>
-        <h1 class="text-lg font-semibold">Dashboard</h1>
-        <div class="text-xs text-white/60 ml-2">Modern Glass UI</div>
+    <aside id="sidebar" class="w-72 hidden md:flex flex-col glass p-4 border-r border-white/4">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="text-lg font-semibold">Admin</div>
+          <div class="text-xs text-white/60">Control center</div>
+        </div>
+        <button id="collapse-sidebar" class="text-sm px-2 py-1 rounded bg-white/6">Collapse</button>
       </div>
 
+      <div class="mb-4">
+        <input id="sidebar-search" type="search" placeholder="Search menu..." class="w-full px-3 py-2 rounded-md bg-white/4 text-sm placeholder-white/60" />
+      </div>
+
+      <nav id="nav-links" class="flex-1 space-y-2 text-sm">
+        <a href="#" class="block px-3 py-2 rounded-md bg-white/4">Dashboard</a>
+        <a href="#" class="block px-3 py-2 rounded-md">Users</a>
+        <a href="#" class="block px-3 py-2 rounded-md">Orders</a>
+        <a href="#" class="block px-3 py-2 rounded-md">Settings</a>
+        <a href="#" class="block px-3 py-2 rounded-md" data-min-level="2">Announcements</a>
+        <a href="#" class="block px-3 py-2 rounded-md" id="open-activity-link">Activity Log</a>
+      </nav>
+
+      <div class="mt-4 text-xs text-white/60">
+        Logged in as<br>
+        <span id="current-user" class="font-medium text-white">User</span><br>
+        Level: <span id="current-level" class="font-semibold text-indigo-300">1</span>
+      </div>
+    </aside>
+
+    
+    <div id="mobile-header" class="md:hidden w-full bg-transparent glass p-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="relative">
-          <input id="global-search" type="search" placeholder="Search..." class="w-72 px-3 py-2 rounded-md bg-white/4 text-sm placeholder-white/60" />
-          <button id="search-clear" class="absolute right-1 top-1/2 -translate-y-1/2 text-xs px-2 py-1 rounded bg-white/6 hidden">Clear</button>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <button id="theme-toggle" class="px-3 py-1 rounded-md bg-white/6 text-sm">Dark</button>
-          <div id="avatar-initials" class="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-semibold">AD</div>
-          <span id="topbar-user" class="text-sm font-medium">Admin</span>
-          <button id="logout-btn" class="text-xs text-white/60 hover:text-red-400 border border-white/6 rounded-md px-2 py-1">Log out</button>
-        </div>
+        <button id="mobile-menu-btn" class="p-2 rounded-md bg-white/6">
+          ☰
+        </button>
+        <div class="text-lg font-semibold">Admin</div>
       </div>
-    </header>
+      <div class="flex items-center gap-2">
+        <button id="mobile-notif-btn" class="p-2 rounded-md bg-white/6">🔔</button>
+        <div id="mobile-avatar" class="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-semibold">AD</div>
+      </div>
+    </div>
 
     
-    <main class="flex-1 p-6 space-y-6 overflow-auto">
+    <div class="flex-1 flex flex-col">
 
       
-      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="bg-white/6 rounded-lg glass p-4 border border-white/5">
-          <div class="text-xs uppercase text-white/50">Total Users</div>
-          <div class="text-2xl font-semibold mt-1">1,200</div>
+      <header class="h-16 bg-white/6 border-b border-white/4 flex items-center justify-between px-6 glass">
+        <div class="flex items-center gap-4">
+          <button id="sidebar-toggle" class="hidden md:inline-flex items-center justify-center p-2 rounded-md bg-white/6">☰</button>
+          <h1 class="text-lg font-semibold">Dashboard</h1>
         </div>
 
-        <div class="bg-white/6 rounded-lg glass p-4 border border-white/5">
-          <div class="text-xs uppercase text-white/50">Active Sessions</div>
-          <div class="text-2xl font-semibold mt-1">85</div>
-        </div>
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <input id="global-search" type="search" placeholder="Search..." class="w-72 px-3 py-2 rounded-md bg-white/4 text-sm placeholder-white/60" />
+            <button id="search-clear" class="absolute right-1 top-1/2 -translate-y-1/2 text-xs px-2 py-1 rounded bg-white/6 hidden">Clear</button>
+          </div>
 
-        <div class="bg-white/6 rounded-lg glass p-4 border border-white/5">
-          <div class="text-xs uppercase text-white/50">New Orders</div>
-          <div class="text-2xl font-semibold mt-1">32</div>
-        </div>
-
-        <div class="bg-white/6 rounded-lg glass p-4 border border-white/5">
-          <div class="text-xs uppercase text-white/50">Revenue</div>
-          <div class="text-2xl font-semibold mt-1">$12,430</div>
-        </div>
-      </section>
-
-      
-      <section class="bg-white/6 rounded-lg glass p-4 border border-white/5">
-        <div class="flex items-center justify-between">
-          <h2 class="text-sm font-semibold text-white/90 mb-2">Announcements</h2>
           <div class="flex items-center gap-2">
-            <button id="post-ann-btn" data-min-level="2" class="px-3 py-1.5 rounded-md bg-indigo-600 text-white text-xs hover:bg-indigo-700">+ Post Announcement</button>
-            <button id="refresh-ann" class="px-2 py-1 rounded-md bg-white/6 text-xs">Refresh</button>
+            <button id="theme-toggle" class="px-3 py-1 rounded-md bg-white/6 text-sm">Dark</button>
+            <div id="avatar-initials" class="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-semibold">AD</div>
+            <span id="topbar-user" class="text-sm font-medium">Admin</span>
+            <button id="logout-btn" class="text-xs text-white/60 hover:text-red-400 border border-white/6 rounded-md px-2 py-1">Log out</button>
           </div>
         </div>
-
-        <div id="announcements-list" class="mt-4 space-y-3 text-sm text-white/80 max-h-48 overflow-auto">
-          
-        </div>
-      </section>
+      </header>
 
       
-      <section class="bg-white/6 rounded-lg glass p-4 border border-white/5">
-        <div class="flex items-center justify-between">
-          <h3 class="text-sm font-semibold">Activity (recent)</h3>
-          <button id="open-activity" class="px-3 py-1 rounded-md bg-white/6 text-sm">View full</button>
-        </div>
+      <main class="flex-1 p-6 space-y-6 overflow-auto">
 
-        <ul id="activity-preview" class="mt-3 text-sm text-white/80 space-y-2 max-h-36 overflow-auto"></ul>
-      </section>
+        
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="bg-white/6 rounded-lg glass p-4 border border-white/5">
+            <div class="text-xs uppercase text-white/50">Total Users</div>
+            <div class="text-2xl font-semibold mt-1">1,200</div>
+          </div>
 
-    </main>
-  </div>
-</div>
+          <div class="bg-white/6 rounded-lg glass p-4 border border-white/5">
+            <div class="text-xs uppercase text-white/50">Active Sessions</div>
+            <div class="text-2xl font-semibold mt-1">85</div>
+          </div>
 
-<div id="announcement-modal" class="fixed inset-0 z-50 hidden items-center justify-center px-4">
-  <div class="bg-white/5 glass-strong rounded-xl w-full max-w-lg shadow-2xl p-6">
-    <h3 class="text-lg font-bold mb-3">Post New Announcement</h3>
-    <textarea id="announcement-text" rows="4" class="w-full rounded-md p-3 bg-white/6 text-sm" placeholder="Write your announcement..."></textarea>
+          <div class="bg-white/6 rounded-lg glass p-4 border border-white/5">
+            <div class="text-xs uppercase text-white/50">New Orders</div>
+            <div class="text-2xl font-semibold mt-1">32</div>
+          </div>
 
-    <div class="flex justify-end gap-2 mt-4">
-      <button onclick="closeAnnouncementModal()" class="px-4 py-2 rounded-md bg-white/6">Cancel</button>
-      <button id="announcement-post" class="px-4 py-2 rounded-md bg-indigo-600 text-white">Post</button>
+          <div class="bg-white/6 rounded-lg glass p-4 border border-white/5">
+            <div class="text-xs uppercase text-white/50">Revenue</div>
+            <div class="text-2xl font-semibold mt-1">$12,430</div>
+          </div>
+        </section>
+
+        
+        <section class="bg-white/6 rounded-lg glass p-4 border border-white/5">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-white/90 mb-2">Pinned Announcements</h2>
+            <div class="flex items-center gap-2">
+              <!-- no "Post pinned" button by default; pin action moves unpinned -> pinned -->
+              <button id="refresh-pinned" class="px-2 py-1 rounded-md bg-white/6 text-xs">Refresh</button>
+            </div>
+          </div>
+
+          <div id="pinned-list" class="mt-4 space-y-3 text-sm text-white/80 max-h-48 overflow-auto">
+            <!-- Pinned announcements will appear here -->
+          </div>
+        </section>
+
+        
+        <section class="bg-white/6 rounded-lg glass p-4 border border-white/5">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-white/90 mb-2">Announcements</h2>
+            <div class="flex items-center gap-2">
+              <button id="post-ann-btn" data-min-level="2" class="px-3 py-1.5 rounded-md bg-indigo-600 text-white text-xs hover:bg-indigo-700">+ Post Announcement</button>
+              <button id="refresh-ann" class="px-2 py-1 rounded-md bg-white/6 text-xs">Refresh</button>
+            </div>
+          </div>
+
+          <div id="announcements-list" class="mt-4 space-y-3 text-sm text-white/80 max-h-48 overflow-auto">
+            <!-- Unpinned announcements appear here -->
+          </div>
+
+          <!-- Scrolling text editor (global marquee text) -->
+          <div class="mt-6">
+            <label class="text-xs font-semibold">Scrolling Text (marquee)</label>
+            <textarea id="scrolling-text-input" rows="2" class="w-full rounded-md p-2 bg-white/6 text-sm" placeholder="Enter scrolling marquee text..."></textarea>
+            <div class="flex gap-2 mt-2">
+              <button id="save-scroll-text" class="px-3 py-1.5 bg-indigo-600 text-white rounded-md text-xs">Save</button>
+              <button id="clear-scroll-text" class="px-3 py-1.5 bg-white/6 text-xs rounded-md">Clear</button>
+            </div>
+          </div>
+        </section>
+
+        
+        <section class="bg-white/6 rounded-lg glass p-4 border border-white/5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold">Activity (recent)</h3>
+            <button id="open-activity" class="px-3 py-1 rounded-md bg-white/6 text-sm">View full</button>
+          </div>
+
+          <ul id="activity-preview" class="mt-3 text-sm text-white/80 space-y-2 max-h-36 overflow-auto"></ul>
+        </section>
+
+      </main>
     </div>
   </div>
-</div>
 
-<div id="activity-modal" class="fixed inset-0 z-50 hidden items-center justify-center px-4">
-  <div class="bg-white/5 glass-strong rounded-xl w-full max-w-2xl shadow-2xl p-6">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-bold">Activity Log</h3>
-      <div class="flex items-center gap-2">
-        <button id="activity-clear" class="px-3 py-1 rounded-md bg-white/6 text-sm">Clear</button>
-        <button onclick="closeActivityModal()" class="px-3 py-1 rounded-md bg-white/6 text-sm">Close</button>
+  <div id="announcement-modal" class="fixed inset-0 z-50 hidden items-center justify-center px-4">
+    <div class="bg-white/5 glass-strong rounded-xl w-full max-w-lg shadow-2xl p-6">
+      <h3 class="text-lg font-bold mb-3">Post New Announcement</h3>
+
+      <label class="text-xs font-semibold">Title</label>
+      <input id="announcement-title" class="w-full rounded-md p-2 bg-white/6 text-sm mb-3" placeholder="Short title (e.g., Team, Maintenance, Admin)">
+
+      <label class="text-xs font-semibold">Message</label>
+      <textarea id="announcement-text" rows="4" class="w-full rounded-md p-3 bg-white/6 text-sm" placeholder="Write your announcement..."></textarea>
+
+      <div class="flex justify-between gap-2 mt-4 items-center">
+        <div class="flex items-center gap-3">
+          <label class="text-xs">Pin announcement?</label>
+          <input id="announcement-pin" type="checkbox" class="h-4 w-4" />
+        </div>
+        <div class="flex justify-end gap-2">
+          <button onclick="closeAnnouncementModal()" class="px-4 py-2 rounded-md bg-white/6">Cancel</button>
+          <button id="announcement-post" class="px-4 py-2 rounded-md bg-indigo-600 text-white">Post</button>
+        </div>
       </div>
     </div>
-    <div id="activity-list" class="max-h-96 overflow-auto space-y-2 text-sm text-white/80"></div>
   </div>
-</div>
 
-<script type="module">
+  <div id="activity-modal" class="fixed inset-0 z-50 hidden items-center justify-center px-4">
+    <div class="bg-white/5 glass-strong rounded-xl w-full max-w-2xl shadow-2xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">Activity Log</h3>
+        <div class="flex items-center gap-2">
+          <button id="activity-clear" class="px-3 py-1 rounded-md bg-white/6 text-sm">Clear</button>
+          <button onclick="closeActivityModal()" class="px-3 py-1 rounded-md bg-white/6 text-sm">Close</button>
+        </div>
+      </div>
+      <div id="activity-list" class="max-h-96 overflow-auto space-y-2 text-sm text-white/80"></div>
+    </div>
+  </div>
 
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-  import { getDatabase, ref, set, onValue, push, update } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+  <script type="module">
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDWGcagecOrdCn7BuBeA72ICFkeH7QWePc",
-    authDomain: "nexus-hub-caeab.firebaseapp.com",
-    databaseURL: "https://nexus-hub-caeab-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "nexus-hub-caeab",
-    storageBucket: "nexus-hub-caeab.firebasestorage.app",
-    messagingSenderId: "45490042276",
-    appId: "1:45490042276:web:5dd49816f386fc23193d31",
-    measurementId: "G-MM3NHNWYZX"
-  };
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      set,
+      onValue,
+      push,
+      update,
+      remove,
+      get
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+    // ---------- Firebase config ----------
+    const firebaseConfig = {
+      apiKey: "AIzaSyDWGcagecOrdCn7BuBeA72ICFkeH7QWePc",
+      authDomain: "nexus-hub-caeab.firebaseapp.com",
+      databaseURL: "https://nexus-hub-caeab-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "nexus-hub-caeab",
+      storageBucket: "nexus-hub-caeab.firebasestorage.app",
+      messagingSenderId: "45490042276",
+      appId: "1:45490042276:web:5dd49816f386fc23193d31",
+      measurementId: "G-MM3NHNWYZX"
+    };
 
-  function showToast(message, opts = {}) {
-    const container = document.getElementById('toast-container');
-    const el = document.createElement('div');
-    el.className = 'glass px-4 py-2 rounded shadow-lg text-sm text-white/95 toast-enter';
-    el.style.minWidth = '180px';
-    el.innerHTML = `<div>${message}</div>`;
-    container.appendChild(el);
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-    requestAnimationFrame(() => el.classList.add('toast-show'));
-    const time = opts.duration ?? 4000;
-    const timeout = setTimeout(() => {
-      el.classList.remove('toast-show');
-      setTimeout(() => el.remove(), 300);
-    }, time);
-    el.addEventListener('click', () => {
-      clearTimeout(timeout);
-      el.remove();
-    });
-  }
+    // ---------- Utilities ----------
+    function showToast(message, opts = {}) {
+      const container = document.getElementById('toast-container');
+      const el = document.createElement('div');
+      el.className = 'glass px-4 py-2 rounded shadow-lg text-sm text-white/95 toast-enter';
+      el.style.minWidth = '180px';
+      el.innerHTML = `<div>${message}</div>`;
+      container.appendChild(el);
 
-  function parseKeyFileContent(text) {
-    const levelMatch = text.match(/level\s*[:=]\s*([1-3])/i);
-    const level = levelMatch ? parseInt(levelMatch[1]) : null;
-
-    const expiryMatch = text.match(/(?:expiry|expiration)[-_ ]?date[:=]\s*(\d{4}-\d{2}-\d{2})/i);
-    const expiry = expiryMatch ? expiryMatch[1] : null;
-
-    const lines = text.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
-
-    const plain = lines.filter(l => !/level\s*[:=]|expiry|expiration/i.test(l));
-    const displayName = (plain[0] && !/^\s*$/i.test(plain[0])) ? plain[0] : 'User';
-    return { displayName, level, expiry };
-  }
-
-  function dateAtMidnight(str) {
-    const m = str && str.match(/(\d{4})-(\d{2})-(\d{2})/);
-    if (!m) return null;
-    return new Date(m[1], parseInt(m[2],10)-1, m[3]);
-  }
-
-  const loginForm = document.getElementById('login-form');
-  const keyFileInput = document.getElementById('key-file');
-  const loadingOverlay = document.getElementById('loading-overlay');
-  const errorOverlay = document.getElementById('error-overlay');
-  const errorReason = document.getElementById('error-reason');
-  const errorTitle = document.getElementById('error-title');
-
-  let userLevel = 1;
-  let currentUser = 'User';
-  let activity = []; 
-
-  function addActivity(entry, pushToFirebase = true) {
-    const timestamp = Date.now();
-    const item = { timestamp, text: entry };
-    activity.unshift(item);
-
-    if (activity.length > 200) activity.length = 200;
-    renderActivityPreview();
-
-    if (pushToFirebase) {
-      const node = push(ref(db, 'activity'));
-      set(node, item).catch(e => console.error('Failed to push activity', e));
+      requestAnimationFrame(() => el.classList.add('toast-show'));
+      const time = opts.duration ?? 4000;
+      const timeout = setTimeout(() => {
+        el.classList.remove('toast-show');
+        setTimeout(() => el.remove(), 300);
+      }, time);
+      el.addEventListener('click', () => {
+        clearTimeout(timeout);
+        el.remove();
+      });
     }
-  }
 
-  function renderActivityPreview() {
-    const ul = document.getElementById('activity-preview');
-    ul.innerHTML = '';
-    activity.slice(0,6).forEach(a => {
-      const li = document.createElement('li');
-      const time = new Date(a.timestamp).toLocaleTimeString();
-      li.className = 'px-3 py-2 rounded bg-white/3';
-      li.textContent = `${time} — ${a.text}`;
-      ul.appendChild(li);
+    function parseKeyFileContent(text) {
+      const levelMatch = text.match(/level\s*[:=]\s*([1-3])/i);
+      const level = levelMatch ? parseInt(levelMatch[1]) : null;
+
+      const expiryMatch = text.match(/(?:expiry|expiration)[-_ ]?date[:=]\s*(\d{4}-\d{2}-\d{2})/i);
+      const expiry = expiryMatch ? expiryMatch[1] : null;
+
+      const lines = text.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+
+      const plain = lines.filter(l => !/level\s*[:=]|expiry|expiration/i.test(l));
+      const displayName = (plain[0] && !/^\s*$/i.test(plain[0])) ? plain[0] : 'User';
+      return { displayName, level, expiry };
+    }
+
+    function dateAtMidnight(str) {
+      const m = str && str.match(/(\d{4})-(\d{2})-(\d{2})/);
+      if (!m) return null;
+      return new Date(m[1], parseInt(m[2],10)-1, m[3]);
+    }
+
+    const loginForm = document.getElementById('login-form');
+    const keyFileInput = document.getElementById('key-file');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const errorOverlay = document.getElementById('error-overlay');
+    const errorReason = document.getElementById('error-reason');
+    const errorTitle = document.getElementById('error-title');
+
+    let userLevel = 1;
+    let currentUser = 'User';
+    let activity = [];
+
+    function addActivity(entry, pushToFirebase = true) {
+      const timestamp = Date.now();
+      const item = { timestamp, text: entry };
+      activity.unshift(item);
+      if (activity.length > 200) activity.length = 200;
+      renderActivityPreview();
+
+      if (pushToFirebase) {
+        const node = push(ref(db, 'activity'));
+        set(node, item).catch(e => console.error('Failed to push activity', e));
+      }
+    }
+
+    function renderActivityPreview() {
+      const ul = document.getElementById('activity-preview');
+      ul.innerHTML = '';
+      activity.slice(0,6).forEach(a => {
+        const li = document.createElement('li');
+        const time = new Date(a.timestamp).toLocaleTimeString();
+        li.className = 'px-3 py-2 rounded bg-white/3';
+        li.textContent = `${time} — ${a.text}`;
+        ul.appendChild(li);
+      });
+    }
+
+    function showError(msg, title = 'Access denied') {
+      errorTitle.textContent = title;
+      errorReason.textContent = msg;
+      errorOverlay.classList.remove('hidden');
+    }
+    document.getElementById('error-overlay-close').onclick = () => errorOverlay.classList.add('hidden');
+
+    function applyLevelPermissions(level) {
+      document.querySelectorAll('[data-min-level]').forEach(el => {
+        const req = parseInt(el.getAttribute('data-min-level') || '1', 10);
+        if (level < req) {
+          el.classList.add('perm-disabled');
+          el.setAttribute('aria-disabled', 'true');
+          el.disabled = true;
+        } else {
+          el.classList.remove('perm-disabled');
+          el.removeAttribute('aria-disabled');
+          el.disabled = false;
+        }
+      });
+    }
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = keyFileInput.files[0];
+      if (!file) return showError('Please select a .key file.');
+      if (!file.name.toLowerCase().endsWith('.key')) return showError('The uploaded file is not a .key file.');
+
+      loadingOverlay.classList.remove('hidden');
+      addActivity('Attempting sign in (reading file)', false);
+
+      const reader = new FileReader();
+      reader.onload = async (evt) => {
+        try {
+          const text = String(evt.target.result || '');
+          const { displayName, level, expiry } = parseKeyFileContent(text);
+
+          if (!level) {
+            loadingOverlay.classList.add('hidden');
+            showError('Invalid key file (missing level).');
+            return;
+          }
+
+          if (expiry) {
+            const exp = dateAtMidnight(expiry);
+            const today = new Date();
+            const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            if (exp && todayMid > exp) {
+              loadingOverlay.classList.add('hidden');
+              showError(`Key expired on ${exp.toLocaleDateString()}.`);
+              return;
+            }
+          }
+
+          await new Promise(r => setTimeout(r, 500));
+
+          completeLogin(displayName, level);
+          showToast(`Welcome, ${displayName}`);
+          addActivity(`Signed in as ${displayName}`);
+
+          loadingOverlay.classList.add('hidden');
+        } catch (err) {
+          loadingOverlay.classList.add('hidden');
+          showError('Unable to read key file.');
+        }
+      };
+
+      reader.onerror = () => {
+        loadingOverlay.classList.add('hidden');
+        showError('Unable to read key file.');
+      };
+
+      reader.readAsText(file);
     });
-  }
 
-  function showError(msg, title = 'Access denied') {
-    errorTitle.textContent = title;
-    errorReason.textContent = msg;
-    errorOverlay.classList.remove('hidden');
-  }
-  document.getElementById('error-overlay-close').onclick = () => errorOverlay.classList.add('hidden');
+    function completeLogin(name, level) {
+      userLevel = level;
+      currentUser = name;
 
-  function applyLevelPermissions(level) {
-    document.querySelectorAll('[data-min-level]').forEach(el => {
-      const req = parseInt(el.getAttribute('data-min-level') || '1', 10);
-      if (level < req) {
+      document.getElementById('current-user').textContent = name;
+      document.getElementById('current-level').textContent = level;
+      document.getElementById('topbar-user').textContent = name;
+      document.getElementById('avatar-initials').textContent = name.substring(0,2).toUpperCase();
+      document.getElementById('mobile-avatar').textContent = name.substring(0,2).toUpperCase();
 
-        el.classList.add('perm-disabled');
-        el.setAttribute('aria-disabled', 'true');
-        el.disabled = true;
+      applyLevelPermissions(level);
+
+      const loginCard = document.getElementById('login-card');
+      const loginScreen = document.getElementById('login-screen');
+      const adminApp = document.getElementById('admin-app');
+
+      loginCard.classList.add('animate-login-out');
+      setTimeout(() => {
+        loginScreen.classList.add('hidden');
+        loginCard.classList.remove('animate-login-out');
+        adminApp.classList.remove('hidden');
+        adminApp.classList.add('animate-admin-in');
+
+        document.getElementById('global-search').focus();
+      }, 420);
+    }
+
+    document.getElementById('logout-btn').onclick = () => {
+      document.getElementById('admin-app').classList.add('hidden');
+      document.getElementById('login-screen').classList.remove('hidden');
+      loginForm.reset();
+      userLevel = 1;
+      applyLevelPermissions(1);
+      addActivity('Logged out');
+      showToast('Signed out');
+    };
+
+    const annListEl = document.getElementById('announcements-list');
+    const pinnedListEl = document.getElementById('pinned-list');
+
+    // Render both pinned and unpinned announcements
+    function renderAnnouncements(unpinnedData, pinnedData) {
+      // Pinned section
+      pinnedListEl.innerHTML = '';
+      if (!pinnedData || Object.keys(pinnedData).length === 0) {
+        pinnedListEl.innerHTML = '<div class="text-sm text-white/50">No pinned announcements.</div>';
       } else {
-        el.classList.remove('perm-disabled');
-        el.removeAttribute('aria-disabled');
-        el.disabled = false;
+        const pinnedArr = Object.keys(pinnedData).map(k => ({ id: k, ...pinnedData[k] }));
+        pinnedArr.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+        pinnedArr.forEach(a => {
+          const wrap = document.createElement('div');
+          wrap.className = 'p-3 rounded bg-indigo-600/10 border border-indigo-600/8 flex flex-col';
+          const time = a.timestamp ? new Date(a.timestamp).toLocaleString() : '—';
+          wrap.innerHTML = `
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="font-medium">📌 ${a.title ?? 'Pinned'}</div>
+                <div class="text-xs text-white/80 mt-1">${a.message}</div>
+                <div class="text-[11px] text-white/60 mt-2">${time}</div>
+              </div>
+              <div class="flex flex-col items-end gap-2">
+                <button data-id="${a.id}" data-action="unpin" class="ann-btn ann-btn-pin px-2 py-1">Unpin</button>
+                <button data-id="${a.id}" data-action="edit-pinned" class="ann-btn ann-btn-edit px-2 py-1">Edit</button>
+                <button data-id="${a.id}" data-action="delete-pinned" class="ann-btn ann-btn-delete px-2 py-1">Delete</button>
+              </div>
+            </div>
+          `;
+          pinnedListEl.appendChild(wrap);
+        });
+      }
+
+      // Unpinned section
+      annListEl.innerHTML = '';
+      if (!unpinnedData || Object.keys(unpinnedData).length === 0) {
+        annListEl.innerHTML = '<div class="text-sm text-white/50">No announcements yet.</div>';
+        return;
+      }
+
+      const arr = Object.keys(unpinnedData).map(k => ({ id: k, ...unpinnedData[k] }));
+      arr.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+      arr.forEach(a => {
+        const wrap = document.createElement('div');
+        wrap.className = 'p-3 rounded bg-white/3 flex flex-col';
+        const time = a.timestamp ? new Date(a.timestamp).toLocaleString() : '—';
+        wrap.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <div class="font-medium">${a.title ?? 'Announcement'}</div>
+              <div class="text-xs text-white/80 mt-1">${a.message}</div>
+              <div class="text-[11px] text-white/60 mt-2">${time}</div>
+            </div>
+            <div class="flex flex-col items-end gap-2">
+              <button data-id="${a.id}" data-action="pin" class="ann-btn ann-btn-pin px-2 py-1">Pin</button>
+              <button data-id="${a.id}" data-action="edit" class="ann-btn ann-btn-edit px-2 py-1">Edit</button>
+              <button data-id="${a.id}" data-action="delete" class="ann-btn ann-btn-delete px-2 py-1">Delete</button>
+            </div>
+          </div>
+        `;
+        annListEl.appendChild(wrap);
+      });
+    }
+
+    // cleanup: keep newest 10 in announcements (unpinned). Pinned items are stored in pinned/ and not touched.
+    async function cleanupAnnouncements() {
+      try {
+        const snap = await get(ref(db, 'announcements'));
+        const data = snap.val() || {};
+        const arr = Object.keys(data).map(k => ({ id: k, ...data[k] }));
+        arr.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+        const toDelete = arr.slice(10); // anything beyond newest 10
+        for (const item of toDelete) {
+          await remove(ref(db, `announcements/${item.id}`));
+        }
+      } catch (err) {
+        console.warn('Cleanup failed', err);
+      }
+    }
+
+    // Listen realtime for both lists. We combine two onValue listeners so render always has both.
+    function setupAnnouncementListeners() {
+      onValue(ref(db, 'announcements'), (snapUnpinned) => {
+        const unpinned = snapUnpinned.val() || {};
+        onValue(ref(db, 'pinned'), (snapPinned) => {
+          const pinned = snapPinned.val() || {};
+          renderAnnouncements(unpinned, pinned);
+        });
+      }, (err) => {
+        console.warn('ann listener error', err);
+      });
+    }
+    setupAnnouncementListeners();
+
+    // Also show a toast when announcements update (but only once per change)
+    onValue(ref(db, 'announcements'), (snap) => {
+      showToast('Announcements updated', { duration: 1400 });
+    }, { onlyOnce: false });
+
+    // Activity listener (initial)
+    addActivity('App loaded', false);
+    onValue(ref(db, 'activity'), (snap) => {
+      const v = snap.val();
+      if (v) {
+        // pick newest 1 from firebase push order (push keys increase)
+        const keys = Object.keys(v);
+        if (keys.length) {
+          const latest = v[keys[keys.length - 1]];
+          if (latest && latest.text && latest.timestamp) {
+            activity.unshift(latest);
+            if (activity.length > 200) activity.length = 200;
+            renderActivityPreview();
+          }
+        }
       }
     });
-  }
 
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const file = keyFileInput.files[0];
-    if (!file) return showError('Please select a .key file.');
-    if (!file.name.toLowerCase().endsWith('.key')) return showError('The uploaded file is not a .key file.');
+    // Post announcement modal handling
+    const annModal = document.getElementById('announcement-modal');
+    const annText = document.getElementById('announcement-text');
+    const annTitle = document.getElementById('announcement-title');
+    const annPinCheckbox = document.getElementById('announcement-pin');
+    const postAnnBtn = document.getElementById('post-ann-btn');
+    const annPost = document.getElementById('announcement-post');
 
-    loadingOverlay.classList.remove('hidden');
-    addActivity('Attempting sign in (reading file)', false);
+    window.openAnnouncementModal = () => {
+      if (userLevel < 2) {
+        showToast('You need level 2 to post announcements');
+        addActivity('Announcement attempt blocked (insufficient level)');
+        return;
+      }
+      annModal.classList.remove('hidden');
+      annTitle.value = currentUser;
+      annText.value = '';
+      annPinCheckbox.checked = false;
+      annText.focus();
+    };
 
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
+    function closeAnnouncementModal() {
+      annModal.classList.add('hidden');
+      annText.value = '';
+      annTitle.value = '';
+      annPinCheckbox.checked = false;
+    }
+    window.closeAnnouncementModal = closeAnnouncementModal;
+
+    postAnnBtn.addEventListener('click', openAnnouncementModal);
+
+    annPost.addEventListener('click', async () => {
+      if (userLevel < 2) {
+        showToast('Permission denied');
+        return;
+      }
+      const text = annText.value.trim();
+      const title = (annTitle.value || currentUser).trim();
+      const pinned = !!annPinCheckbox.checked;
+
+      if (!text) {
+        showToast('Type a message first');
+        return;
+      }
+
+      const payload = {
+        title: title || currentUser,
+        message: text,
+        timestamp: Date.now()
+      };
+
       try {
-        const text = String(evt.target.result || '');
-        const { displayName, level, expiry } = parseKeyFileContent(text);
+        if (pinned) {
+          const node = push(ref(db, 'pinned'));
+          await set(node, payload);
+          showToast('Pinned announcement posted');
+          addActivity(`Posted pinned announcement: ${text}`);
+        } else {
+          const node = push(ref(db, 'announcements'));
+          await set(node, payload);
+          showToast('Announcement posted');
+          addActivity(`Posted announcement: ${text}`);
+          // cleanup unpinned (keep newest 10)
+          await cleanupAnnouncements();
+        }
+        closeAnnouncementModal();
+      } catch (err) {
+        console.error('Failed to post', err);
+        showError('Failed to post announcement: ' + (err.message || err));
+      }
+    });
 
-        if (!level) {
-          loadingOverlay.classList.add('hidden');
-          showError('Invalid key file (missing level).');
-          return;
+    document.getElementById('refresh-ann').addEventListener('click', () => {
+      onValue(ref(db, 'announcements'), (snap) => {
+        renderAnnouncements(snap.val(), null);
+        showToast('Announcements refreshed', { duration: 1200 });
+      }, { onlyOnce: true });
+    });
+
+    document.getElementById('refresh-pinned').addEventListener('click', () => {
+      onValue(ref(db, 'pinned'), (snap) => {
+        renderAnnouncements(null, snap.val());
+        showToast('Pinned refreshed', { duration: 1200 });
+      }, { onlyOnce: true });
+    });
+
+    // delegated click handler for pin/unpin/edit/delete buttons
+    document.addEventListener('click', async (e) => {
+      const btn = e.target;
+      if (!btn || !btn.dataset || !btn.dataset.action) return;
+
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+
+      // Ensure proper permission for destructive actions
+      if ((action.startsWith('delete') || action === 'pin' || action === 'unpin' || action.startsWith('edit')) && userLevel < 2) {
+        showToast('Insufficient permission');
+        addActivity('Blocked action due to insufficient permission');
+        return;
+      }
+
+      try {
+        if (action === 'pin') {
+          // move from announcements/ID -> pinned/ID
+          const snap = await get(ref(db, `announcements/${id}`));
+          const data = snap.val();
+          if (!data) { showToast('Item no longer exists'); return; }
+          await set(ref(db, `pinned/${id}`), data);
+          await remove(ref(db, `announcements/${id}`));
+          showToast('Pinned');
+          addActivity(`Pinned announcement ${id}`);
         }
 
-        if (expiry) {
-          const exp = dateAtMidnight(expiry);
-          const today = new Date();
-          const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-          if (exp && todayMid > exp) {
-            loadingOverlay.classList.add('hidden');
-            showError(`Key expired on ${exp.toLocaleDateString()}.`);
-            return;
+        else if (action === 'unpin') {
+          const snap = await get(ref(db, `pinned/${id}`));
+          const data = snap.val();
+          if (!data) { showToast('Item no longer exists'); return; }
+          await set(ref(db, `announcements/${id}`), data);
+          await remove(ref(db, `pinned/${id}`));
+          showToast('Unpinned');
+          addActivity(`Unpinned announcement ${id}`);
+          // ensure announcements kept to 10
+          await cleanupAnnouncements();
+        }
+
+        else if (action === 'delete') {
+          if (!confirm('Delete this announcement?')) return;
+          await remove(ref(db, `announcements/${id}`));
+          showToast('Deleted');
+          addActivity(`Deleted announcement ${id}`);
+        }
+
+        else if (action === 'delete-pinned') {
+          if (!confirm('Delete this pinned announcement?')) return;
+          await remove(ref(db, `pinned/${id}`));
+          showToast('Deleted pinned');
+          addActivity(`Deleted pinned announcement ${id}`);
+        }
+
+        else if (action === 'edit') {
+          const snap = await get(ref(db, `announcements/${id}`));
+          const data = snap.val();
+          if (!data) { showToast('Item no longer exists'); return; }
+          const newMsg = prompt('Edit announcement message:', data.message || '');
+          if (newMsg !== null) {
+            await update(ref(db, `announcements/${id}`), { message: newMsg, timestamp: Date.now() });
+            showToast('Updated');
+            addActivity(`Edited announcement ${id}`);
+            // cleanup just in case timestamps changed ordering
+            await cleanupAnnouncements();
           }
         }
 
-        await new Promise(r => setTimeout(r, 500));
-
-        completeLogin(displayName, level);
-        showToast(`Welcome, ${displayName}`);
-        addActivity(`Signed in as ${displayName}`);
-
-        loadingOverlay.classList.add('hidden');
-      } catch (err) {
-        loadingOverlay.classList.add('hidden');
-        showError('Unable to read key file.');
-      }
-    };
-
-    reader.onerror = () => {
-      loadingOverlay.classList.add('hidden');
-      showError('Unable to read key file.');
-    };
-
-    reader.readAsText(file);
-  });
-
-  function completeLogin(name, level) {
-    userLevel = level;
-    currentUser = name;
-
-    document.getElementById('current-user').textContent = name;
-    document.getElementById('current-level').textContent = level;
-    document.getElementById('topbar-user').textContent = name;
-    document.getElementById('avatar-initials').textContent = name.substring(0,2).toUpperCase();
-    document.getElementById('mobile-avatar').textContent = name.substring(0,2).toUpperCase();
-
-    applyLevelPermissions(level);
-
-    const loginCard = document.getElementById('login-card');
-    const loginScreen = document.getElementById('login-screen');
-    const adminApp = document.getElementById('admin-app');
-
-    loginCard.classList.add('animate-login-out');
-    setTimeout(() => {
-      loginScreen.classList.add('hidden');
-      loginCard.classList.remove('animate-login-out');
-      adminApp.classList.remove('hidden');
-      adminApp.classList.add('animate-admin-in');
-
-      document.getElementById('global-search').focus();
-    }, 420);
-  }
-
-  document.getElementById('logout-btn').onclick = () => {
-    document.getElementById('admin-app').classList.add('hidden');
-    document.getElementById('login-screen').classList.remove('hidden');
-    loginForm.reset();
-    userLevel = 1;
-    applyLevelPermissions(1);
-    addActivity('Logged out');
-    showToast('Signed out');
-  };
-
-  const annListEl = document.getElementById('announcements-list');
-  function renderAnnouncements(snapshotData) {
-    annListEl.innerHTML = '';
-
-    if (!snapshotData) {
-      annListEl.innerHTML = '<div class="text-sm text-white/50">No announcements yet.</div>';
-      return;
-    }
-
-    const arr = Object.keys(snapshotData).map(k => ({ id: k, ...snapshotData[k] }));
-    arr.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
-    arr.forEach(a => {
-      const wrap = document.createElement('div');
-      wrap.className = 'p-3 rounded bg-white/3';
-      const time = new Date(a.timestamp).toLocaleString();
-      wrap.innerHTML = `<div class="font-medium">${a.title ?? 'Announcement'}</div>
-                        <div class="text-xs text-white/70">${a.message}</div>
-                        <div class="text-[11px] text-white/60 mt-1">${time}</div>`;
-      annListEl.appendChild(wrap);
-    });
-  }
-
-  onValue(ref(db, 'announcements'), (snap) => {
-    const val = snap.val();
-    renderAnnouncements(val);
-    showToast('Announcements updated', { duration: 2200 });
-  }, (err) => {
-    console.warn('ann listener error', err);
-  });
-
-  const annModal = document.getElementById('announcement-modal');
-  const annText = document.getElementById('announcement-text');
-  const postAnnBtn = document.getElementById('post-ann-btn');
-  const annPost = document.getElementById('announcement-post');
-
-  window.openAnnouncementModal = () => {
-    if (userLevel < 2) {
-      showToast('You need level 2 to post announcements');
-      addActivity('Announcement attempt blocked (insufficient level)');
-      return;
-    }
-    annModal.classList.remove('hidden');
-    annText.focus();
-  };
-
-  function closeAnnouncementModal() {
-    annModal.classList.add('hidden');
-    annText.value = '';
-  }
-  window.closeAnnouncementModal = closeAnnouncementModal;
-
-  postAnnBtn.addEventListener('click', openAnnouncementModal);
-
-  annPost.addEventListener('click', async () => {
-    if (userLevel < 2) {
-      showToast('Permission denied');
-      return;
-    }
-    const text = annText.value.trim();
-    if (!text) {
-      showToast('Type a message first');
-      return;
-    }
-
-    const node = push(ref(db, 'announcements'));
-    const payload = {
-      title: `${currentUser}`,
-      message: text,
-      timestamp: Date.now()
-    };
-    set(node, payload).then(() => {
-      showToast('Announcement posted');
-      addActivity(`Posted announcement: ${text}`);
-      closeAnnouncementModal();
-    }).catch(err => {
-      showError('Failed to post announcement: ' + (err.message || err));
-    });
-  });
-
-  document.getElementById('refresh-ann').addEventListener('click', () => {
-
-    onValue(ref(db, 'announcements'), (snap) => {
-      renderAnnouncements(snap.val());
-      showToast('Announcements refreshed', { duration: 1600 });
-    }, { onlyOnce: true });
-  });
-
-  const activityModal = document.getElementById('activity-modal');
-  function openActivityModal() {
-    activityModal.classList.remove('hidden');
-    renderActivityFull();
-  }
-  function closeActivityModal() {
-    activityModal.classList.add('hidden');
-  }
-  document.getElementById('open-activity').addEventListener('click', openActivityModal);
-  document.getElementById('open-activity-link').addEventListener('click', openActivityModal);
-  document.getElementById('activity-clear').addEventListener('click', () => {
-    activity = [];
-    document.getElementById('activity-list').innerHTML = '';
-
-    showToast('Local activity cleared');
-  });
-
-  function renderActivityFull() {
-    const list = document.getElementById('activity-list');
-    list.innerHTML = '';
-    if (!activity.length) {
-      list.innerHTML = '<div class="text-sm text-white/60">No recent activity</div>';
-      return;
-    }
-    activity.forEach(a => {
-      const el = document.createElement('div');
-      el.className = 'p-2 rounded bg-white/3';
-      el.innerHTML = `<div class="text-xs text-white/70">${new Date(a.timestamp).toLocaleString()}</div>
-                      <div class="text-sm">${a.text}</div>`;
-      list.appendChild(el);
-    });
-  }
-
-  document.getElementById('sidebar-search').addEventListener('input', (e) => {
-    const q = e.target.value.trim().toLowerCase();
-    const links = document.querySelectorAll('#nav-links a');
-    links.forEach(a => {
-      const txt = a.textContent.trim().toLowerCase();
-      a.style.display = txt.includes(q) ? 'block' : 'none';
-    });
-  });
-
-  const globalSearch = document.getElementById('global-search');
-  const searchClear = document.getElementById('search-clear');
-  globalSearch.addEventListener('input', (e) => {
-    const q = e.target.value.trim().toLowerCase();
-    searchClear.classList.toggle('hidden', !q);
-
-    document.querySelectorAll('main section:first-child > div').forEach(card => {
-      const txt = card.textContent.toLowerCase();
-      card.style.display = q && !txt.includes(q) ? 'none' : '';
-    });
-  });
-  searchClear.addEventListener('click', () => { globalSearch.value=''; globalSearch.dispatchEvent(new Event('input')); });
-
-  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-  const sidebar = document.getElementById('sidebar');
-  mobileMenuBtn.addEventListener('click', () => {
-    const isHidden = sidebar.classList.toggle('hidden');
-    if (!sidebar.classList.contains('hidden')) {
-
-      sidebar.style.position = 'absolute';
-      sidebar.style.zIndex = 60;
-      sidebar.classList.remove('hidden');
-    } else {
-      sidebar.style.position = '';
-      sidebar.style.zIndex = '';
-    }
-  });
-
-  document.getElementById('collapse-sidebar').addEventListener('click', () => {
-    sidebar.classList.toggle('w-24');
-    sidebar.querySelectorAll('a').forEach(a => a.classList.toggle('text-sm'));
-  });
-
-  const themeToggle = document.getElementById('theme-toggle');
-  function setTheme(dark) {
-    if (dark) {
-      document.documentElement.classList.add('dark');
-      document.body.classList.add('bg-gray-900');
-      themeToggle.textContent = 'Light';
-      localStorage.setItem('pref-dark','1');
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.body.classList.remove('bg-gray-900');
-      themeToggle.textContent = 'Dark';
-      localStorage.removeItem('pref-dark');
-    }
-  }
-
-  setTheme(!!localStorage.getItem('pref-dark'));
-  themeToggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
-
-  addActivity('App loaded', false);
-  onValue(ref(db, 'activity'), (snap) => {
-
-    const v = snap.val();
-    if (v) {
-
-      const keys = Object.keys(v);
-      if (keys.length) {
-
-        const latest = v[keys[keys.length - 1]];
-        if (latest && latest.text && latest.timestamp) {
-
-          activity.unshift(latest);
-          if (activity.length > 200) activity.length = 200;
-          renderActivityPreview();
+        else if (action === 'edit-pinned') {
+          const snap = await get(ref(db, `pinned/${id}`));
+          const data = snap.val();
+          if (!data) { showToast('Item no longer exists'); return; }
+          const newMsg = prompt('Edit pinned announcement message:', data.message || '');
+          if (newMsg !== null) {
+            await update(ref(db, `pinned/${id}`), { message: newMsg, timestamp: Date.now() });
+            showToast('Updated pinned');
+            addActivity(`Edited pinned announcement ${id}`);
+          }
         }
+
+      } catch (err) {
+        console.error('Action failed', err);
+        showError('Action failed: ' + (err.message || err));
+      }
+    });
+
+    // --------- Scrolling marquee text controls ----------
+    const scrollInput = document.getElementById("scrolling-text-input");
+    const scrollSave = document.getElementById("save-scroll-text");
+    const scrollClear = document.getElementById("clear-scroll-text");
+
+    // Load existing
+    onValue(ref(db, "scrolling_text/value"), (snap) => {
+      scrollInput.value = snap.val() || "";
+    }, (err) => {
+      console.warn('scroll load error', err);
+    });
+
+    // Save
+    scrollSave.onclick = async () => {
+      if (userLevel < 2) {
+        showToast('Insufficient permission');
+        return;
+      }
+      try {
+        await set(ref(db, "scrolling_text/value"), scrollInput.value || "");
+        showToast('Scrolling text updated');
+        addActivity('Updated scrolling text');
+      } catch (err) {
+        showError('Failed saving scrolling text: ' + (err.message || err));
+      }
+    };
+
+    scrollClear.onclick = async () => {
+      if (userLevel < 2) {
+        showToast('Insufficient permission');
+        return;
+      }
+      if (!confirm('Clear scrolling text?')) return;
+      try {
+        await set(ref(db, "scrolling_text/value"), "");
+        showToast('Cleared scrolling text');
+        addActivity('Cleared scrolling text');
+      } catch (err) {
+        showError('Failed clearing: ' + (err.message || err));
+      }
+    };
+
+    // ---------- Activity modal and rendering ----------
+    const activityModal = document.getElementById('activity-modal');
+    function openActivityModal() {
+      activityModal.classList.remove('hidden');
+      renderActivityFull();
+    }
+    function closeActivityModal() {
+      activityModal.classList.add('hidden');
+    }
+    document.getElementById('open-activity').addEventListener('click', openActivityModal);
+    document.getElementById('open-activity-link').addEventListener('click', openActivityModal);
+    document.getElementById('activity-clear').addEventListener('click', () => {
+      activity = [];
+      document.getElementById('activity-list').innerHTML = '';
+      showToast('Local activity cleared');
+    });
+
+    function renderActivityFull() {
+      const list = document.getElementById('activity-list');
+      list.innerHTML = '';
+      if (!activity.length) {
+        list.innerHTML = '<div class="text-sm text-white/60">No recent activity</div>';
+        return;
+      }
+      activity.forEach(a => {
+        const el = document.createElement('div');
+        el.className = 'p-2 rounded bg-white/3';
+        el.innerHTML = `<div class="text-xs text-white/70">${new Date(a.timestamp).toLocaleString()}</div>
+                        <div class="text-sm">${a.text}</div>`;
+        list.appendChild(el);
+      });
+    }
+
+    // Search helpers
+    document.getElementById('sidebar-search').addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      const links = document.querySelectorAll('#nav-links a');
+      links.forEach(a => {
+        const txt = a.textContent.trim().toLowerCase();
+        a.style.display = txt.includes(q) ? 'block' : 'none';
+      });
+    });
+
+    const globalSearch = document.getElementById('global-search');
+    const searchClear = document.getElementById('search-clear');
+    globalSearch.addEventListener('input', (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      searchClear.classList.toggle('hidden', !q);
+
+      document.querySelectorAll('main section:first-child > div').forEach(card => {
+        const txt = card.textContent.toLowerCase();
+        card.style.display = q && !txt.includes(q) ? 'none' : '';
+      });
+    });
+    searchClear.addEventListener('click', () => { globalSearch.value=''; globalSearch.dispatchEvent(new Event('input')); });
+
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const sidebar = document.getElementById('sidebar');
+    mobileMenuBtn.addEventListener('click', () => {
+      const isHidden = sidebar.classList.toggle('hidden');
+      if (!sidebar.classList.contains('hidden')) {
+        sidebar.style.position = 'absolute';
+        sidebar.style.zIndex = 60;
+        sidebar.classList.remove('hidden');
+      } else {
+        sidebar.style.position = '';
+        sidebar.style.zIndex = '';
+      }
+    });
+
+    document.getElementById('collapse-sidebar').addEventListener('click', () => {
+      sidebar.classList.toggle('w-24');
+      sidebar.querySelectorAll('a').forEach(a => a.classList.toggle('text-sm'));
+    });
+
+    const themeToggle = document.getElementById('theme-toggle');
+    function setTheme(dark) {
+      if (dark) {
+        document.documentElement.classList.add('dark');
+        document.body.classList.add('bg-gray-900');
+        themeToggle.textContent = 'Light';
+        localStorage.setItem('pref-dark','1');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.body.classList.remove('bg-gray-900');
+        themeToggle.textContent = 'Dark';
+        localStorage.removeItem('pref-dark');
       }
     }
-  });
 
-  document.addEventListener('click', (e) => {
-    const el = e.target;
-    if (el && el.closest && el.closest('.perm-disabled')) {
-      e.preventDefault();
-      showToast('Insufficient permission for that action');
-    }
-  });
+    setTheme(!!localStorage.getItem('pref-dark'));
+    themeToggle.addEventListener('click', () => setTheme(!document.documentElement.classList.contains('dark')));
 
-  onValue(ref(db, 'announcements'), (snap) => {
-    renderAnnouncements(snap.val());
-  }, { onlyOnce: true });
+    // prevent clicks on perm-disabled items
+    document.addEventListener('click', (e) => {
+      const el = e.target;
+      if (el && el.closest && el.closest('.perm-disabled')) {
+        e.preventDefault();
+        showToast('Insufficient permission for that action');
+      }
+    });
 
-</script>
-</body>
-</html>
+    // initial fetch once for display (ensures UI populates immediately)
+    (async function initialLoad() {
+      try {
+        const [aSnap, pSnap, sSnap] = await Promise.all([
+          get(ref(db, 'announcements')),
+          get(ref(db, 'pinned')),
+          get(ref(db, 'scrolling_text/value'))
+        ]);
+        renderAnnouncements(aSnap.val() || {}, pSnap.val() || {});
+        scrollInput.value = sSnap.val() || "";
+      } catch (err) {
+        console.warn('Initial load failed', err);
+      }
+    })();
+
+  </script>
+  </body>
+  </html>
