@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Admin Panel</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            discord: {
+              bg: '#313338',
+              sidebar: '#2b2d31',
+              element: '#2b2d31', // Cards often same as sidebar or slightly lighter
+              dark: '#1e1f22',    // Inputs, deep backgrounds
+              hover: '#3f4147',
+              active: '#404249',
+              blurple: '#5865F2',
+              'blurple-dark': '#4752c4',
+              green: '#23a559',
+              red: '#da373c',
+              text: '#dbdee1',
+              muted: '#949ba4'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Reset & Base */
+    body {
+      background-color: #313338; /* Modern Discord Main BG */
+      color: #dbdee1;
+      font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+
+    /* Discord-like Utilities */
+    .discord-card {
+      background-color: #2b2d31;
+      border-radius: 8px;
+      /* No border usually, just flat color */
+    }
+
+    .discord-input {
+      background-color: #1e1f22;
+      border: none;
+      color: #dbdee1;
+      border-radius: 4px;
+      transition: 0.2s;
+    }
+    .discord-input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px #00a8fc; /* Focus ring usually light blue or blurple */
+    }
+
+    .discord-btn-primary {
+      background-color: #5865F2;
+      color: white;
+      transition: background-color 0.17s ease;
+    }
+    .discord-btn-primary:hover {
+      background-color: #4752c4;
+    }
+
+    /* Animations */
+    .animate-login-in { animation: loginIn 0.3s cubic-bezier(.22,.61,.36,1) forwards;}
+    .animate-login-out { animation: loginOut 0.2s ease forwards;}
+    .animate-admin-in { animation: adminIn 0.3s ease forwards;}
+
+    @keyframes loginIn { from{opacity:0;transform:scale(1.05)} to{opacity:1;transform:scale(1)} }
+    @keyframes loginOut { from{opacity:1} to{opacity:0;transform:scale(0.95)} }
+    @keyframes adminIn { from{opacity:0;} to{opacity:1;} }
+
+    /* Custom Scrollbar (Discord style) */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+      background-color: #2b2d31;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: #1a1b1e;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background-color: #2b2d31;
+    }
+
+    .spinner {
+      border: 4px solid #2b2d31;
+      border-top-color: #5865F2;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .toast-enter { transform: translateY(10px); opacity: 0; transition: all .2s ease; }
+    .toast-show { transform: translateY(0); opacity: 1; }
+
+    .perm-disabled {
+      opacity: 0.5;
+      pointer-events: none;
+      cursor: not-allowed;
+    }
+    
+    [data-hidden="true"] { display: none !important; }
+
+    /* Helper Overrides */
+    .ann-btn { font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: 500; transition: 0.1s; }
+    .ann-btn-edit { background-color: #3f4147; color: #dbdee1; }
+    .ann-btn-edit:hover { background-color: #4e5058; }
+    .ann-btn-pin { background-color: #3f4147; color: #dbdee1; }
+    .ann-btn-pin:hover { background-color: #4e5058; }
+    .ann-btn-delete { background-color: transparent; color: #da373c; }
+    .ann-btn-delete:hover { background-color: #da373c; color: white; }
+
+  </style>
+</head>
+<body class="min-h-screen overflow-hidden">
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-[#1e1f22]">
+    <div class="flex flex-col items-center gap-4">
+      <div class="spinner"></div>
+      <div class="text-sm font-medium text-discord-text">Authenticating...</div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-end"></div>
+
+  <!-- Error Modal -->
+  <div id="error-overlay" class="fixed inset-0 z-40 hidden items-center justify-center px-4 bg-black/50 backdrop-blur-sm">
+    <div class="max-w-md w-full bg-[#313338] rounded-md shadow-2xl p-6 text-center transform scale-100">
+      <h2 id="error-title" class="text-xl font-bold text-white mb-2">Notice</h2>
+      <p id="error-reason" class="text-discord-muted mb-6"></p>
+      <div class="flex justify-center">
+        <button id="error-overlay-close" class="discord-btn-primary px-8 py-2 rounded text-sm font-medium">Okay</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Screen -->
+  <div id="login-screen" class="min-h-screen flex items-center justify-center px-4 bg-[url('https://cdn.discordapp.com/attachments/0/0/geometry-bg.png')] bg-cover">
+    <!-- Overlay to darken background image if needed, or just solid color -->
+    <div class="absolute inset-0 bg-[#313338]"></div>
+
+    <div id="login-card" class="relative z-10 w-full max-w-md bg-[#313338] rounded-md shadow-lg p-8 animate-login-in">
+      <div class="mb-6 text-center">
+        <div class="text-2xl font-bold text-white mb-2">Welcome Back!</div>
+        <p class="text-discord-muted text-sm">We're so excited to see you again!</p>
+      </div>
+
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label for="key-file" class="block text-xs font-bold text-discord-muted mb-2 uppercase tracking-wide">Key File <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <input id="key-file" name="key-file" type="file" accept=".key" 
+              class="block w-full text-sm text-discord-muted 
+                     file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 
+                     file:text-sm file:font-semibold file:bg-[#5865F2] file:text-white 
+                     hover:file:bg-[#4752c4]
+                     bg-[#1e1f22] rounded p-1 cursor-pointer" required>
+          </div>
+          <p class="mt-2 text-xs text-discord-muted">Upload your access key to enter.</p>
+        </div>
+
+        <button id="login-button" type="submit" class="w-full py-2.5 rounded bg-[#5865F2] hover:bg-[#4752c4] text-white font-medium transition-colors mt-4">Log In</button>
+      </form>
+      
+      <div class="mt-4 text-xs text-discord-muted">
+        Need an account? <span class="text-[#00aff4] cursor-pointer hover:underline">Register</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin App -->
+  <div id="admin-app" class="min-h-screen hidden flex bg-[#313338]">
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-60 hidden md:flex flex-col bg-[#2b2d31] h-screen relative">
+      <!-- Server/App Name -->
+      <div class="h-12 flex items-center px-4 border-b border-[#1f2023] shadow-sm">
+        <div class="text-base font-bold text-white truncate">Nexus Hub</div>
+      </div>
+
+      <!-- Search -->
+      <div class="px-2 py-3">
+        <input id="sidebar-search" type="search" placeholder="Find or start a conversation" class="w-full px-2 py-1.5 rounded bg-[#1e1f22] text-sm text-discord-text placeholder-discord-muted focus:outline-none focus:text-white" />
+      </div>
+
+      <!-- Navigation -->
+      <nav id="nav-links" class="flex-1 px-2 space-y-0.5 overflow-y-auto">
+        <div class="text-xs font-bold text-discord-muted uppercase px-2 py-2 mt-2 hover:text-discord-text cursor-default">Dashboard</div>
+        
+        <a href="#" class="flex items-center gap-3 px-2 py-1.5 rounded hover:bg-[#35373c] group text-discord-muted hover:text-white transition-colors">
+          <span class="text-xl text-discord-muted group-hover:text-white">#</span>
+          <span class="font-medium">overview</span>
+        </a>
+        <a href="#" class="flex items-center gap-3 px-2 py-1.5 rounded hover:bg-[#35373c] group text-discord-muted hover:text-white transition-colors">
+          <span class="text-xl text-discord-muted group-hover:text-white">#</span>
+          <span class="font-medium">users</span>
+        </a>
+        <a href="#" class="flex items-center gap-3 px-2 py-1.5 rounded hover:bg-[#35373c] group text-discord-muted hover:text-white transition-colors">
+          <span class="text-xl text-discord-muted group-hover:text-white">#</span>
+          <span class="font-medium">orders</span>
+        </a>
+        
+        <div class="text-xs font-bold text-discord-muted uppercase px-2 py-2 mt-4 hover:text-discord-text cursor-default">Admin Tools</div>
+
+        <a href="#" data-min-level="2" class="flex items-center gap-3 px-2 py-1.5 rounded hover:bg-[#35373c] group text-discord-muted hover:text-white transition-colors">
+          <span class="text-xl text-discord-muted group-hover:text-white">📢</span>
+          <span class="font-medium">announcements</span>
+        </a>
+        <a href="#" class="flex items-center gap-3 px-2 py-1.5 rounded hover:bg-[#35373c] group text-discord-muted hover:text-white transition-colors">
+          <span class="text-xl text-discord-muted group-hover:text-white">⚙️</span>
+          <span class="font-medium">settings</span>
+        </a>
+        <a href="#" id="open-activity-link" class="flex items-center gap-3 px-2 py-1.5 rounded hover:bg-[#35373c] group text-discord-muted hover:text-white transition-colors">
+          <span class="text-xl text-discord-muted group-hover:text-white">📋</span>
+          <span class="font-medium">activity-log</span>
+        </a>
+      </nav>
+
+      <!-- User Panel (Bottom of Sidebar) -->
+      <div class="bg-[#232428] p-2 flex items-center justify-between">
+        <div class="flex items-center gap-2 group cursor-pointer rounded hover:bg-[#3f4147] p-1 -ml-1 transition-colors">
+          <div id="avatar-initials" class="h-8 w-8 rounded-full bg-[#5865F2] flex items-center justify-center text-white text-xs font-bold relative">
+            <span id="user-initials-text">AD</span>
+            <div class="absolute bottom-0 right-0 w-3 h-3 bg-[#23a559] border-2 border-[#232428] rounded-full"></div>
+          </div>
+          <div class="overflow-hidden">
+            <div id="current-user" class="text-sm font-bold text-white truncate w-20">User</div>
+            <div class="text-xs text-discord-muted truncate">Level <span id="current-level">1</span></div>
+          </div>
+        </div>
+        <div class="flex">
+          <button id="logout-btn" class="p-2 hover:bg-[#3f4147] rounded text-discord-muted hover:text-red-400 transition-colors" title="Log Out">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Mobile Header -->
+    <div id="mobile-header" class="md:hidden w-full bg-[#313338] border-b border-[#1f2023] p-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <button id="mobile-menu-btn" class="text-discord-muted hover:text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+        <div class="font-bold text-white"># overview</div>
+      </div>
+      <div id="mobile-avatar" class="h-8 w-8 rounded-full bg-[#5865F2] flex items-center justify-center text-white text-xs font-bold">AD</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col h-screen overflow-hidden">
+      
+      <!-- Top Bar (Header) -->
+      <header class="h-12 bg-[#313338] border-b border-[#26272d] flex items-center justify-between px-4 shadow-sm shrink-0">
+        <div class="flex items-center gap-2 text-white">
+          <span class="text-2xl text-discord-muted font-light">#</span>
+          <h1 class="font-bold">overview</h1>
+          <div class="h-4 w-[1px] bg-discord-muted/30 mx-2"></div>
+          <span class="text-xs text-discord-muted truncate hidden sm:block">Detailed analytics and server health status</span>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="relative hidden sm:block">
+            <input id="global-search" type="search" placeholder="Search" class="bg-[#1e1f22] text-sm text-discord-text rounded px-2 py-1 transition-all w-36 focus:w-56 focus:outline-none" />
+            <span id="search-clear" class="hidden absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer text-discord-muted hover:text-white">×</span>
+          </div>
+          <button id="theme-toggle" class="text-discord-muted hover:text-white hidden">
+             <!-- Theme toggle logic kept but hidden as Discord is typically dark mode only -->
+             Dark
+          </button>
+          <a href="#" class="text-discord-muted hover:text-white">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+          </a>
+        </div>
+      </header>
+
+      <!-- Content Scroll Area -->
+      <main class="flex-1 p-4 space-y-6 overflow-y-auto scrollbar-thin">
+
+        <!-- Stats Grid -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-[#2b2d31] rounded-md p-4 hover:bg-[#323438] transition-colors cursor-default">
+            <div class="text-xs font-bold uppercase text-discord-muted mb-1">Total Members</div>
+            <div class="text-2xl font-bold text-white">1,200</div>
+          </div>
+          <div class="bg-[#2b2d31] rounded-md p-4 hover:bg-[#323438] transition-colors cursor-default">
+            <div class="text-xs font-bold uppercase text-discord-muted mb-1">Online Now</div>
+            <div class="text-2xl font-bold text-[#23a559]">85</div>
+          </div>
+          <div class="bg-[#2b2d31] rounded-md p-4 hover:bg-[#323438] transition-colors cursor-default">
+            <div class="text-xs font-bold uppercase text-discord-muted mb-1">Pending Orders</div>
+            <div class="text-2xl font-bold text-white">32</div>
+          </div>
+          <div class="bg-[#2b2d31] rounded-md p-4 hover:bg-[#323438] transition-colors cursor-default">
+            <div class="text-xs font-bold uppercase text-discord-muted mb-1">Revenue</div>
+            <div class="text-2xl font-bold text-[#f0b232]">$12,430</div>
+          </div>
+        </section>
+
+        <!-- Pinned Messages -->
+        <section class="bg-[#2b2d31] rounded-md p-4">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xs font-bold uppercase text-discord-muted">Pinned Messages</h2>
+            <button id="refresh-pinned" class="text-xs text-discord-blurple hover:underline">Refresh</button>
+          </div>
+          
+          <div id="pinned-list" class="space-y-2">
+            <!-- JS populates -->
+          </div>
+        </section>
+
+        <!-- Announcements / Chat Channel Style -->
+        <section class="bg-[#2b2d31] rounded-md p-4 flex flex-col h-[500px]">
+          <div class="flex items-center justify-between mb-4 border-b border-[#3f4147] pb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl text-discord-muted">#</span>
+              <h2 class="font-bold text-white">announcements</h2>
+            </div>
+            <div class="flex items-center gap-3">
+              <button id="refresh-ann" class="text-discord-muted hover:text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Message List -->
+          <div id="announcements-list" class="flex-1 overflow-y-auto pr-2 space-y-4 mb-4">
+             <!-- JS Populates: Will look like discord messages -->
+          </div>
+
+          <!-- Input Area -->
+          <div class="mt-auto">
+            <div class="relative bg-[#383a40] rounded-lg p-3">
+              <div data-min-level="2" class="flex flex-col gap-2">
+                 <button id="post-ann-btn" class="flex items-center gap-2 text-discord-muted hover:text-white text-left w-full">
+                    <div class="w-6 h-6 rounded-full bg-[#3f4147] flex items-center justify-center text-xl">+</div>
+                    <span class="text-sm">Click to create a new announcement...</span>
+                 </button>
+              </div>
+              <!-- Fallback visual if level < 2 -->
+              <div class="hidden perm-disabled-message text-xs text-red-400 mt-1">You do not have permission to post.</div>
+            </div>
+            
+            <!-- Scrolling Text Section -->
+            <div class="mt-4 pt-4 border-t border-[#3f4147]">
+              <label class="text-xs font-bold uppercase text-discord-muted mb-2 block">Marquee Text</label>
+              <div class="flex gap-2">
+                <input id="scrolling-text-input" type="text" class="flex-1 bg-[#383a40] text-discord-text rounded px-3 py-2 text-sm focus:outline-none" placeholder="Set global scrolling text..." />
+                <button id="save-scroll-text" class="px-3 py-1 bg-[#5865F2] hover:bg-[#4752c4] text-white rounded text-sm font-medium">Save</button>
+                <button id="clear-scroll-text" class="px-3 py-1 bg-transparent hover:underline text-discord-muted text-sm">Clear</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Activity Log -->
+        <section class="bg-[#2b2d31] rounded-md p-4">
+          <div class="flex items-center justify-between mb-2">
+             <h3 class="text-xs font-bold uppercase text-discord-muted">Recent Activity</h3>
+             <button id="open-activity" class="text-xs text-discord-text hover:underline">View All</button>
+          </div>
+          <ul id="activity-preview" class="space-y-1 font-mono text-xs text-[#23a559]"></ul>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Announcement Modal -->
+  <div id="announcement-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div class="bg-[#313338] rounded-md shadow-2xl w-full max-w-lg overflow-hidden animate-admin-in">
+      <div class="p-4 border-b border-[#26272d] flex justify-between items-center">
+        <h3 class="font-bold text-white">Create Announcement</h3>
+        <button onclick="closeAnnouncementModal()" class="text-discord-muted hover:text-white">✕</button>
+      </div>
+      
+      <div class="p-4 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-discord-muted uppercase mb-1">Title / Author</label>
+          <input id="announcement-title" class="w-full bg-[#1e1f22] text-white p-2 rounded focus:outline-none" placeholder="Author Name">
+        </div>
+        
+        <div>
+          <label class="block text-xs font-bold text-discord-muted uppercase mb-1">Message</label>
+          <textarea id="announcement-text" rows="5" class="w-full bg-[#1e1f22] text-white p-2 rounded focus:outline-none resize-none" placeholder="Type your message here..."></textarea>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input id="announcement-pin" type="checkbox" class="accent-[#5865F2] w-4 h-4 cursor-pointer" />
+          <label for="announcement-pin" class="text-sm text-discord-text cursor-pointer">Pin to top channel</label>
+        </div>
+      </div>
+
+      <div class="p-4 bg-[#2b2d31] flex justify-end gap-3">
+        <button onclick="closeAnnouncementModal()" class="px-4 py-2 hover:underline text-white text-sm">Cancel</button>
+        <button id="announcement-post" class="px-6 py-2 bg-[#5865F2] hover:bg-[#4752c4] text-white rounded text-sm font-medium">Post</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity Modal -->
+  <div id="activity-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div class="bg-[#313338] rounded-md shadow-2xl w-full max-w-2xl h-[600px] flex flex-col animate-admin-in">
+      <div class="p-4 border-b border-[#26272d] flex justify-between items-center shrink-0">
+        <h3 class="font-bold text-white">Activity Log</h3>
+        <div class="flex gap-4">
+          <button id="activity-clear" class="text-red-400 hover:text-red-500 text-sm font-medium">Clear Log</button>
+          <button onclick="closeActivityModal()" class="text-discord-muted hover:text-white">✕</button>
+        </div>
+      </div>
+      <div id="activity-list" class="flex-1 overflow-y-auto p-4 space-y-2 bg-[#2b2d31] font-mono text-xs"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      set,
+      onValue,
+      push,
+      update,
+      remove,
+      get
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDWGcagecOrdCn7BuBeA72ICFkeH7QWePc",
+      authDomain: "nexus-hub-caeab.firebaseapp.com",
+      databaseURL: "https://nexus-hub-caeab-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "nexus-hub-caeab",
+      storageBucket: "nexus-hub-caeab.firebasestorage.app",
+      messagingSenderId: "45490042276",
+      appId: "1:45490042276:web:5dd49816f386fc23193d31",
+      measurementId: "G-MM3NHNWYZX"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Utilities
+    function showToast(message, opts = {}) {
+      const container = document.getElementById('toast-container');
+      const el = document.createElement('div');
+      // Discord-style toast
+      el.className = 'bg-[#1e1f22] border-l-4 border-[#5865F2] pl-3 pr-4 py-3 rounded shadow-xl text-sm text-white flex items-center gap-2 toast-enter';
+      el.innerHTML = `<span>${message}</span>`;
+      container.appendChild(el);
+
+      requestAnimationFrame(() => el.classList.add('toast-show'));
+      const time = opts.duration ?? 3000;
+      setTimeout(() => {
+        el.classList.remove('toast-show');
+        setTimeout(() => el.remove(), 200);
+      }, time);
+    }
+
+    function parseKeyFileContent(text) {
+      const levelMatch = text.match(/level\s*[:=]\s*([1-3])/i);
+      const level = levelMatch ? parseInt(levelMatch[1]) : null;
+      const expiryMatch = text.match(/(?:expiry|expiration)[-_ ]?date[:=]\s*(\d{4}-\d{2}-\d{2})/i);
+      const expiry = expiryMatch ? expiryMatch[1] : null;
+      const lines = text.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+      const plain = lines.filter(l => !/level\s*[:=]|expiry|expiration/i.test(l));
+      const displayName = (plain[0] && !/^\s*$/i.test(plain[0])) ? plain[0] : 'User';
+      return { displayName, level, expiry };
+    }
+
+    function dateAtMidnight(str) {
+      const m = str && str.match(/(\d{4})-(\d{2})-(\d{2})/);
+      if (!m) return null;
+      return new Date(m[1], parseInt(m[2],10)-1, m[3]);
+    }
+
+    // State
+    let userLevel = 1;
+    let currentUser = 'User';
+    let activity = [];
+
+    // DOM Elements
+    const loginForm = document.getElementById('login-form');
+    const keyFileInput = document.getElementById('key-file');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const errorOverlay = document.getElementById('error-overlay');
+    const errorReason = document.getElementById('error-reason');
+    const errorTitle = document.getElementById('error-title');
+
+    function addActivity(entry, pushToFirebase = true) {
+      const timestamp = Date.now();
+      const item = { timestamp, text: entry };
+      activity.unshift(item);
+      if (activity.length > 200) activity.length = 200;
+      renderActivityPreview();
+
+      if (pushToFirebase) {
+        const node = push(ref(db, 'activity'));
+        set(node, item).catch(e => console.error('Push activity failed', e));
+      }
+    }
+
+    function renderActivityPreview() {
+      const ul = document.getElementById('activity-preview');
+      ul.innerHTML = '';
+      activity.slice(0,6).forEach(a => {
+        const li = document.createElement('li');
+        const date = new Date(a.timestamp);
+        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' });
+        li.className = 'text-discord-muted truncate';
+        li.innerHTML = `<span class="text-[#23a559] mr-2">[${timeStr}]</span>${a.text}`;
+        ul.appendChild(li);
+      });
+    }
+
+    function showError(msg, title = 'Access Denied') {
+      errorTitle.textContent = title;
+      errorReason.textContent = msg;
+      errorOverlay.classList.remove('hidden');
+    }
+    document.getElementById('error-overlay-close').onclick = () => errorOverlay.classList.add('hidden');
+
+    function applyLevelPermissions(level) {
+      document.querySelectorAll('[data-min-level]').forEach(el => {
+        const req = parseInt(el.getAttribute('data-min-level') || '1', 10);
+        if (level < req) {
+          el.classList.add('perm-disabled');
+          // If we want to hide it completely: el.classList.add('hidden');
+          // But Discord usually shows locked features as greyed out
+        } else {
+          el.classList.remove('perm-disabled');
+        }
+      });
+    }
+
+    // Login Logic
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const file = keyFileInput.files[0];
+      if (!file) return showError('Please select a .key file.');
+      if (!file.name.toLowerCase().endsWith('.key')) return showError('The uploaded file is not a .key file.');
+
+      loadingOverlay.classList.remove('hidden');
+      addActivity('Attempting sign in (reading file)', false);
+
+      const reader = new FileReader();
+      reader.onload = async (evt) => {
+        try {
+          const text = String(evt.target.result || '');
+          const { displayName, level, expiry } = parseKeyFileContent(text);
+
+          if (!level) {
+            loadingOverlay.classList.add('hidden');
+            showError('Invalid key file (missing level).');
+            return;
+          }
+
+          if (expiry) {
+            const exp = dateAtMidnight(expiry);
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            if (exp && today > exp) {
+              loadingOverlay.classList.add('hidden');
+              showError(`Key expired on ${exp.toLocaleDateString()}.`);
+              return;
+            }
+          }
+
+          // Fake delay for effect
+          await new Promise(r => setTimeout(r, 600));
+
+          completeLogin(displayName, level);
+          showToast(`Welcome back, ${displayName}!`);
+          addActivity(`Signed in as ${displayName}`);
+          loadingOverlay.classList.add('hidden');
+        } catch (err) {
+          loadingOverlay.classList.add('hidden');
+          showError('Unable to read key file.');
+        }
+      };
+      reader.onerror = () => {
+        loadingOverlay.classList.add('hidden');
+        showError('Unable to read key file.');
+      };
+      reader.readAsText(file);
+    });
+
+    function completeLogin(name, level) {
+      userLevel = level;
+      currentUser = name;
+
+      document.getElementById('current-user').textContent = name;
+      document.getElementById('current-level').textContent = level;
+      document.getElementById('user-initials-text').textContent = name.substring(0,2).toUpperCase();
+      document.getElementById('mobile-avatar').textContent = name.substring(0,2).toUpperCase();
+
+      applyLevelPermissions(level);
+
+      const loginCard = document.getElementById('login-card');
+      const loginScreen = document.getElementById('login-screen');
+      const adminApp = document.getElementById('admin-app');
+
+      loginCard.classList.add('animate-login-out');
+      setTimeout(() => {
+        loginScreen.classList.add('hidden');
+        adminApp.classList.remove('hidden');
+        adminApp.classList.add('animate-admin-in');
+        document.getElementById('global-search').focus();
+      }, 200);
+    }
+
+    document.getElementById('logout-btn').onclick = () => {
+      document.getElementById('admin-app').classList.add('hidden');
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('login-card').classList.remove('animate-login-out');
+      document.getElementById('login-card').classList.add('animate-login-in');
+      loginForm.reset();
+      userLevel = 1;
+      applyLevelPermissions(1);
+      addActivity('Logged out');
+      showToast('Logged out successfully');
+    };
+
+    // Announcements
+    const annListEl = document.getElementById('announcements-list');
+    const pinnedListEl = document.getElementById('pinned-list');
+
+    // Create a Discord-style message element
+    function createMessageElement(item, isPinned = false) {
+      const el = document.createElement('div');
+      el.className = isPinned 
+        ? 'group flex items-start gap-3 p-2 rounded bg-[#323438] hover:bg-[#36383e] border-l-2 border-[#5865F2]' 
+        : 'group flex items-start gap-4 p-2 pl-0 hover:bg-[#32353b] rounded pr-2';
+
+      const time = item.timestamp ? new Date(item.timestamp).toLocaleDateString() + ' ' + new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Today';
+      const initials = (item.title || 'User').substring(0,2).toUpperCase();
+      
+      // Avatar color based on ID hash or just random predefined
+      const colors = ['bg-[#5865F2]', 'bg-[#23a559]', 'bg-[#eb459e]', 'bg-[#f0b232]'];
+      const colorClass = colors[(item.id || '').length % colors.length] || colors[0];
+
+      if (isPinned) {
+        // Compact view for pinned
+        el.innerHTML = `
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline justify-between">
+               <div class="font-bold text-sm text-white truncate">${item.title || 'System'}</div>
+               <div class="text-[10px] text-discord-muted">${time}</div>
+            </div>
+            <div class="text-sm text-discord-text mt-1 break-words">${item.message}</div>
+          </div>
+          <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button data-id="${item.id}" data-action="unpin" class="text-xs text-discord-muted hover:text-white" title="Unpin">📌</button>
+            <button data-id="${item.id}" data-action="delete-pinned" class="text-xs text-discord-muted hover:text-red-400" title="Delete">🗑️</button>
+          </div>
+        `;
+      } else {
+        // Full message view for feed
+        el.innerHTML = `
+          <div class="w-10 h-10 rounded-full ${colorClass} flex-shrink-0 flex items-center justify-center text-white text-xs font-bold mt-1">
+            ${initials}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-white cursor-pointer hover:underline">${item.title || 'System'}</span>
+              <span class="text-[11px] text-discord-muted">${time}</span>
+              ${userLevel >= 2 ? '<span class="ml-auto opacity-0 group-hover:opacity-100 flex gap-2 bg-[#2b2d31] rounded p-1 shadow-sm -mt-2">' +
+                `<button data-id="${item.id}" data-action="edit" class="hover:text-discord-blurple">✎</button>` +
+                `<button data-id="${item.id}" data-action="pin" class="hover:text-white">📌</button>` +
+                `<button data-id="${item.id}" data-action="delete" class="hover:text-red-400">🗑️</button>` +
+              '</span>' : ''}
+            </div>
+            <div class="text-discord-text mt-1 whitespace-pre-wrap break-words">${item.message}</div>
+          </div>
+        `;
+      }
+      return el;
+    }
+
+    function renderAnnouncements(unpinnedData, pinnedData) {
+      // Pinned
+      pinnedListEl.innerHTML = '';
+      if (pinnedData) {
+        const arr = Object.keys(pinnedData).map(k => ({ id: k, ...pinnedData[k] }));
+        arr.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+        arr.forEach(item => {
+          pinnedListEl.appendChild(createMessageElement(item, true));
+        });
+      } else {
+        pinnedListEl.innerHTML = '<div class="text-xs text-discord-muted italic p-2">No pinned messages</div>';
+      }
+
+      // Feed
+      annListEl.innerHTML = '';
+      if (!unpinnedData) {
+        annListEl.innerHTML = `
+          <div class="flex flex-col items-center justify-center h-full text-discord-muted">
+            <div class="text-2xl mb-2">👋</div>
+            <p>Welcome to #announcements!</p>
+            <p class="text-xs">This is the start of this channel.</p>
+          </div>
+        `;
+        return;
+      }
+      const arr = Object.keys(unpinnedData).map(k => ({ id: k, ...unpinnedData[k] }));
+      arr.sort((a,b) => (a.timestamp||0) - (b.timestamp||0)); // Oldest at top for chat log feel, or newest at top? Discord is bottom-up.
+      // Let's keep newest at bottom, so sort ascending.
+      
+      // For this UI, we are doing a "Feed", but usually panels show newest first. 
+      // Discord shows newest at bottom. Let's stick to standard panel "newest first" for readability in this specific layout context, 
+      // OR adapt to Discord style (newest at bottom).
+      // Given the HTML structure (flex-col), let's render newest at top (descending) as it's a dashboard, not a full chat app.
+      arr.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+
+      arr.forEach(item => {
+        annListEl.appendChild(createMessageElement(item, false));
+      });
+    }
+
+    // Handlers and Listeners
+    async function cleanupAnnouncements() {
+      try {
+        const snap = await get(ref(db, 'announcements'));
+        const data = snap.val() || {};
+        const arr = Object.keys(data).map(k => ({ id: k, ...data[k] }));
+        arr.sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+        const toDelete = arr.slice(20); 
+        for (const item of toDelete) {
+          await remove(ref(db, `announcements/${item.id}`));
+        }
+      } catch (err) { console.warn(err); }
+    }
+
+    function setupListeners() {
+      onValue(ref(db, 'announcements'), (snapUn) => {
+        const unpinned = snapUn.val();
+        onValue(ref(db, 'pinned'), (snapPin) => {
+          renderAnnouncements(unpinned, snapPin.val());
+        });
+      });
+    }
+    setupListeners();
+
+    onValue(ref(db, 'announcements'), () => showToast('Channel updated', {duration:1000}), {onlyOnce:false});
+
+    // Activity
+    addActivity('System Ready', false);
+    onValue(ref(db, 'activity'), (snap) => {
+      const v = snap.val();
+      if(v) {
+        const keys = Object.keys(v);
+        if(keys.length) {
+          const latest = v[keys[keys.length-1]];
+          activity.unshift(latest);
+          if(activity.length > 200) activity.length = 200;
+          renderActivityPreview();
+        }
+      }
+    });
+
+    // Modal Logic
+    const annModal = document.getElementById('announcement-modal');
+    window.openAnnouncementModal = () => {
+      if(userLevel < 2) return showToast('You do not have permission to send messages in this channel.');
+      annModal.classList.remove('hidden');
+      document.getElementById('announcement-title').value = currentUser;
+      document.getElementById('announcement-text').value = '';
+      document.getElementById('announcement-text').focus();
+    };
+    window.closeAnnouncementModal = () => annModal.classList.add('hidden');
+    document.getElementById('post-ann-btn').addEventListener('click', window.openAnnouncementModal);
+
+    document.getElementById('announcement-post').addEventListener('click', async () => {
+      if(userLevel < 2) return;
+      const text = document.getElementById('announcement-text').value.trim();
+      const title = document.getElementById('announcement-title').value.trim() || currentUser;
+      const pinned = document.getElementById('announcement-pin').checked;
+
+      if(!text) return showToast('Message cannot be empty');
+
+      const payload = { title, message: text, timestamp: Date.now() };
+
+      try {
+        if(pinned) {
+          await set(push(ref(db, 'pinned')), payload);
+          showToast('Message pinned');
+          addActivity('Pinned a message');
+        } else {
+          await set(push(ref(db, 'announcements')), payload);
+          showToast('Message sent');
+          addActivity('Sent a message');
+          cleanupAnnouncements();
+        }
+        window.closeAnnouncementModal();
+      } catch(e) { showError(e.message); }
+    });
+
+    // Delegated Actions
+    document.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button');
+      if (!btn || !btn.dataset.action) return;
+      
+      const { action, id } = btn.dataset;
+      
+      if(userLevel < 2) {
+        showToast('You do not have permission.');
+        return;
+      }
+
+      try {
+        if(action === 'delete') {
+            await remove(ref(db, `announcements/${id}`));
+            showToast('Message deleted');
+        } else if(action === 'delete-pinned') {
+            await remove(ref(db, `pinned/${id}`));
+            showToast('Pinned message deleted');
+        } else if(action === 'pin') {
+            const snap = await get(ref(db, `announcements/${id}`));
+            if(snap.exists()) {
+              await set(ref(db, `pinned/${id}`), snap.val());
+              await remove(ref(db, `announcements/${id}`));
+              showToast('Message pinned');
+            }
+        } else if(action === 'unpin') {
+            const snap = await get(ref(db, `pinned/${id}`));
+            if(snap.exists()) {
+              await set(ref(db, `announcements/${id}`), snap.val());
+              await remove(ref(db, `pinned/${id}`));
+              showToast('Message unpinned');
+            }
+        } else if(action === 'edit') {
+             const snap = await get(ref(db, `announcements/${id}`));
+             const v = snap.val();
+             if(v) {
+               const newM = prompt('Edit message:', v.message);
+               if(newM) {
+                 await update(ref(db, `announcements/${id}`), { message: newM });
+                 showToast('Message edited');
+               }
+             }
+        }
+      } catch(err) { console.error(err); }
+    });
+
+    // Marquee
+    const scrollInput = document.getElementById('scrolling-text-input');
+    onValue(ref(db, 'scrolling_text/value'), snap => scrollInput.value = snap.val() || '');
+    
+    document.getElementById('save-scroll-text').onclick = async () => {
+      if(userLevel < 2) return showToast('Permission denied');
+      await set(ref(db, 'scrolling_text/value'), scrollInput.value);
+      showToast('Status updated');
+    };
+    document.getElementById('clear-scroll-text').onclick = async () => {
+      if(userLevel < 2) return;
+      scrollInput.value = '';
+      await set(ref(db, 'scrolling_text/value'), '');
+      showToast('Status cleared');
+    };
+
+    // Full Activity Modal
+    const activityModal = document.getElementById('activity-modal');
+    document.getElementById('open-activity').onclick = () => {
+      activityModal.classList.remove('hidden');
+      renderActivityFull();
+    };
+    document.getElementById('open-activity-link').onclick = document.getElementById('open-activity').onclick;
+    window.closeActivityModal = () => activityModal.classList.add('hidden');
+
+    function renderActivityFull() {
+      const list = document.getElementById('activity-list');
+      list.innerHTML = '';
+      activity.forEach(a => {
+        const div = document.createElement('div');
+        div.className = 'border-b border-[#3f4147] py-1';
+        div.innerHTML = `<span class="text-[#23a559] mr-2">${new Date(a.timestamp).toLocaleString()}</span> <span class="text-discord-text">${a.text}</span>`;
+        list.appendChild(div);
+      });
+    }
+
+    // Sidebar Mobile Toggle
+    const sidebar = document.getElementById('sidebar');
+    document.getElementById('mobile-menu-btn').onclick = () => {
+       sidebar.classList.toggle('hidden');
+       if(!sidebar.classList.contains('hidden')) {
+         sidebar.classList.add('absolute', 'z-50', 'shadow-2xl');
+       } else {
+         sidebar.classList.remove('absolute', 'z-50', 'shadow-2xl');
+       }
+    };
+    
+    // Search filter
+    document.getElementById('global-search').addEventListener('input', (e) => {
+      const v = e.target.value.toLowerCase();
+      document.querySelectorAll('main section').forEach(sec => {
+         sec.style.display = sec.textContent.toLowerCase().includes(v) ? '' : 'none';
+      });
+    });
+
+    // Init
+    (async function init() {
+      try {
+         const [a,b,c] = await Promise.all([
+           get(ref(db, 'announcements')),
+           get(ref(db, 'pinned')),
+           get(ref(db, 'scrolling_text/value'))
+         ]);
+         renderAnnouncements(a.val(), b.val());
+         scrollInput.value = c.val() || '';
+      } catch(e) {}
+    })();
+
+  </script>
+</body>
+</html>
