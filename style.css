@@ -1,0 +1,42 @@
+/* styles.css */
+
+/* Basic reset to remove default browser margins/padding */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: sans-serif;
+}
+
+.site-header {
+    background-color: #333; /* Dark background color */
+    color: white;
+    padding: 10px 20px; /* Space inside the header */
+    display: flex; /* Use flexbox for layout */
+    justify-content: space-between; /* Pushes logo to the left, nav to the right */
+    align-items: center; /* Vertically centers the items */
+}
+
+.logo h1 {
+    font-size: 1.5em; /* Adjust font size */
+}
+
+.main-nav ul {
+    list-style: none; /* Remove bullet points */
+    display: flex; /* Arrange list items in a row */
+}
+
+.main-nav ul li a {
+    color: white;
+    text-decoration: none; /* Remove underlines from links */
+    padding: 10px 15px; /* Space around links */
+    display: block;
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+
+.main-nav ul li a:hover {
+    background-color: #555; /* Change background on hover */
+}
