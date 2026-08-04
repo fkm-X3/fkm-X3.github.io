@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fkm-X3 // Systems Developer & Compiler Engineer</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            900: '#14532d',
+                        },
+                        rust: {
+                            500: '#f97316',
+                            600: '#ea580c',
+                        },
+                        llvm: {
+                            500: '#06b6d4',
+                            600: '#0891b2',
+                        },
+                        darkbg: '#080c14',
+                        cardbg: '#0f172a',
+                    },
+                    fontFamily: {
+                        mono: ['"JetBrains Mono"', '"Fira Code"', 'monospace'],
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #080c14;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+        /* Grid background pattern */
+        .bg-grid-pattern {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        }
+        /* Stamp effect for language Wolframite */
+        .wip-stamp {
+            transform: rotate(-8deg);
+            border: 2px dashed #f59e0b;
+            color: #fbbf24;
+            background: rgba(245, 158, 11, 0.1);
+            text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
+        }
+        /* Glowing neon utilities */
+        .glow-emerald {
+            box-shadow: 0 0 25px -5px rgba(34, 197, 94, 0.25);
+        }
+        .glow-cyan {
+            box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.25);
+        }
+        .glow-amber {
+            box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.25);
+        }
+        /* Terminal cursor animation */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .animate-cursor {
+            animation: blink 1s infinite;
+        }
+    </style>
+</head>
+<body class="bg-darkbg text-slate-200 antialiased bg-grid-pattern min-h-screen flex flex-col justify-between">
+
+    <!-- Top Navigation Header -->
+    <header class="sticky top-0 z-50 backdrop-blur-md bg-darkbg/80 border-b border-slate-800/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <a href="#" class="flex items-center space-x-3 group">
+                <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold code-font group-hover:bg-emerald-500/20 transition-all">
+                    &gt;_
+                </div>
+                <span class="font-bold text-lg tracking-tight code-font text-white group-hover:text-emerald-400 transition-colors">
+                    fkm-X3<span class="text-emerald-500">//</span>dev
+                </span>
+            </a>
+
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex items-center space-x-8 text-sm font-medium">
+                <a href="#about" class="hover:text-emerald-400 transition-colors">About</a>
+                <a href="#projects" class="hover:text-emerald-400 transition-colors">Projects</a>
+                <a href="#lang-w" class="hover:text-amber-400 transition-colors flex items-center gap-1.5">
+                    Lang <span class="px-1.5 py-0.5 text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded font-mono">Wolframite</span>
+                </a>
+                <a href="#pipeline" class="hover:text-emerald-400 transition-colors">Compiler Demo</a>
+                <a href="#skills" class="hover:text-emerald-400 transition-colors">Stack</a>
+            </nav>
+
+            <!-- External Links / CTA -->
+            <div class="flex items-center space-x-4">
+                <a href="https://github.com/fkm-X3" target="_blank" rel="noopener noreferrer" 
+                   class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-sm font-medium border border-slate-700 transition-all text-slate-200">
+                    <i data-lucide="github" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">GitHub</span>
+                </a>
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden border-b border-slate-800 bg-slate-900/95 px-4 pt-2 pb-4 space-y-2 font-medium">
+            <a href="#about" class="block py-2 text-slate-300 hover:text-emerald-400">About</a>
+            <a href="#projects" class="block py-2 text-slate-300 hover:text-emerald-400">Projects</a>
+            <a href="#lang-w" class="block py-2 text-amber-400">Lang Wolframite</a>
+            <a href="#pipeline" class="block py-2 text-slate-300 hover:text-emerald-400">Compiler Demo</a>
+            <a href="#skills" class="block py-2 text-slate-300 hover:text-emerald-400">Stack</a>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+        <!-- Hero Section -->
+        <section id="about" class="relative pt-12 pb-20 lg:pt-20 lg:pb-28 overflow-hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                    
+                    <!-- Left Intro Column -->
+                    <div class="lg:col-span-7 space-y-6">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider code-font">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Kernel & Systems Developer
+                        </div>
+
+                        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white">
+                            Building Bare-Metal <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-400 to-amber-400">Operating Systems</span> & Compiler Tools
+                        </h1>
+
+                        <p class="text-lg text-slate-400 max-w-2xl leading-relaxed">
+                            Hi, I'm <span class="text-slate-200 font-semibold">fkm-X3</span>. I build low-level software from scratch — including custom kernel architectures, zero-dependency LLVM alternative backends, and novel programming language runtimes.
+                        </p>
+
+                        <!-- Key Badges -->
+                        <div class="flex flex-wrap gap-2 pt-2">
+                            <span class="px-3 py-1 rounded border border-slate-800 bg-slate-900/60 text-xs text-slate-300 code-font flex items-center gap-1.5">
+                                <i data-lucide="cpu" class="w-3.5 h-3.5 text-emerald-400"></i> Rust & C Kernels
+                            </span>
+                            <span class="px-3 py-1 rounded border border-slate-800 bg-slate-900/60 text-xs text-slate-300 code-font flex items-center gap-1.5">
+                                <i data-lucide="layers" class="w-3.5 h-3.5 text-cyan-400"></i> Custom LLVM Remakes
+                            </span>
+                            <span class="px-3 py-1 rounded border border-slate-800 bg-slate-900/60 text-xs text-slate-300 code-font flex items-center gap-1.5">
+                                <i data-lucide="code-2" class="w-3.5 h-3.5 text-amber-400"></i> Language Design
+                            </span>
+                        </div>
+
+                        <!-- CTA Actions -->
+                        <div class="flex flex-wrap gap-4 pt-4">
+                            <a href="#projects" class="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold transition-all shadow-lg shadow-emerald-600/20 flex items-center gap-2">
+                                <i data-lucide="folder-git-2" class="w-5 h-5"></i>
+                                View GitHub Repos
+                            </a>
+                            <a href="#lang-w" class="px-6 py-3 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-white font-semibold border border-slate-700 transition-all flex items-center gap-2">
+                                <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i>
+                                Discover Lang Wolframite
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Interactive Cyber Terminal -->
+                    <div class="lg:col-span-5">
+                        <div class="rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl overflow-hidden glow-emerald">
+                            <!-- Terminal Bar -->
+                            <div class="bg-slate-900/90 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-3 h-3 rounded-full bg-rose-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                                </div>
+                                <span class="text-xs font-mono text-slate-400 flex items-center gap-1">
+                                    <i data-lucide="terminal" class="w-3.5 h-3.5 text-emerald-400"></i> fkm-x3@baremetal:~$
+                                </span>
+                                <button id="term-clear" class="text-slate-500 hover:text-slate-300 text-xs font-mono" title="Clear terminal">clear</button>
+                            </div>
+
+                            <!-- Terminal Content -->
+                            <div class="p-4 code-font text-xs sm:text-sm h-80 overflow-y-auto space-y-3" id="terminal-body">
+                                <p class="text-slate-500">// Interactive System Shell v1.0.4</p>
+                                <p class="text-slate-400">Type <span class="text-emerald-400 font-bold">'help'</span> to view commands or click quick prompts below:</p>
+                                
+                                <div id="terminal-history" class="space-y-2"></div>
+
+                                <!-- Active Prompt Input -->
+                                <div class="flex items-center space-x-2 text-slate-200">
+                                    <span class="text-emerald-400 font-bold">&gt;</span>
+                                    <input type="text" id="terminal-input" class="bg-transparent border-none outline-none text-emerald-300 w-full font-mono focus:ring-0 p-0" placeholder="Type 'alloy', 'tungsten', 'w-lang', 'skills'..." autofocus autocomplete="off">
+                                </div>
+                            </div>
+
+                            <!-- Terminal Quick Command Bar -->
+                            <div class="bg-slate-900/50 p-2.5 border-t border-slate-800 flex flex-wrap gap-2 text-xs code-font">
+                                <button class="term-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 transition" data-cmd="alloy">
+                                    $ alloy
+                                </button>
+                                <button class="term-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 transition" data-cmd="tungsten">
+                                    $ tungsten
+                                </button>
+                                <button class="term-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 transition" data-cmd="w-lang">
+                                    $ w-lang
+                                </button>
+                                <button class="term-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition" data-cmd="skills">
+                                    $ skills
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Projects Section -->
+        <section id="projects" class="py-16 border-t border-slate-800/80 bg-slate-950/40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+                    <div>
+                        <span class="text-emerald-400 font-semibold code-font text-xs uppercase tracking-wider">// OPEN SOURCE REPOSITORIES</span>
+                        <h2 class="text-3xl font-extrabold text-white mt-1">Featured Flagship Projects</h2>
+                    </div>
+                    <p class="text-slate-400 text-sm mt-2 md:mt-0 max-w-md">
+                        Low-level architectures engineered for maximum efficiency, zero bloat, and bare-metal targets.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    
+                    <!-- PROJECT 1: Alloy-OS -->
+                    <div class="group relative bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 hover:border-emerald-500/50 transition-all duration-300 flex flex-col justify-between glow-emerald">
+                        <div>
+                            <!-- Header / Badge -->
+                            <div class="flex items-start justify-between gap-4 mb-4">
+                                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                                    <i data-lucide="cpu" class="w-7 h-7"></i>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs code-font font-medium">
+                                        Rust + C Kernel
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Title -->
+                            <h3 class="text-2xl font-bold text-white group-hover:text-emerald-400 transition-colors flex items-center gap-2">
+                                Alloy-OS
+                                <a href="https://github.com/fkm-X3/Alloy-OS" target="_blank" rel="noopener opacity-80 hover:opacity-100" title="Visit GitHub">
+                                    <i data-lucide="external-link" class="w-4 h-4 text-slate-400 group-hover:text-emerald-400"></i>
+                                </a>
+                            </h3>
+
+                            <p class="text-slate-400 text-sm mt-3 leading-relaxed">
+                                A custom, bare-metal operating system built entirely from scratch. Leverages memory-safe Rust for monolithic kernel components and core drivers alongside lightweight C runtime interfaces. <span class="text-amber-400/90 font-medium">(No stable release yet)</span>
+                            </p>
+
+                            <!-- Key Technical Features List -->
+                            <div class="mt-6 space-y-2 text-xs code-font">
+                                <div class="flex items-center gap-2 text-slate-300">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 flex-shrink-0"></i>
+                                    <span>Custom x86_64 bootloader stage & memory allocator</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-slate-300">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 flex-shrink-0"></i>
+                                    <span>Asynchronous task scheduler & monolithic kernel subsystem IPC</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-slate-300">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400 flex-shrink-0"></i>
+                                    <span>Direct hardware interaction & PCI device enumeration</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer / Link -->
+                        <div class="mt-8 pt-6 border-t border-slate-800/80 flex items-center justify-between">
+                            <div class="flex items-center space-x-3 text-xs text-slate-400 code-font">
+                                <span class="flex items-center gap-1">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> Rust 68%
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> C 32%
+                                </span>
+                            </div>
+
+                            <a href="https://github.com/fkm-X3/Alloy-OS" target="_blank" rel="noopener noreferrer"
+                               class="inline-flex items-center gap-2 text-sm font-semibold text-emerald-400 hover:text-emerald-300 transition-colors">
+                                <span>github.com/fkm-X3/Alloy-OS</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- PROJECT 2: Tungsten (Experimental) -->
+                    <div class="group relative bg-slate-900/90 border border-slate-800 rounded-2xl p-6 sm:p-8 hover:border-cyan-500/50 transition-all duration-300 flex flex-col justify-between glow-cyan">
+                        <div>
+                            <!-- Header / Badge -->
+                            <div class="flex items-start justify-between gap-4 mb-4">
+                                <div class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                                    <i data-lucide="binary" class="w-7 h-7"></i>
+                                </div>
+                                <div class="flex items-center gap-2 flex-wrap justify-end">
+                                    <span class="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs code-font font-medium flex items-center gap-1">
+                                        <i data-lucide="flask-conical" class="w-3 h-3"></i> (experimental)
+                                    </span>
+                                    <span class="px-2.5 py-1 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800 text-xs code-font font-medium">
+                                        Compiler Infrastructure
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Title -->
+                            <h3 class="text-2xl font-bold text-white group-hover:text-cyan-400 transition-colors flex items-center gap-2.5">
+                                <span>Tungsten</span>
+                                <span class="text-xs font-mono font-medium px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 tracking-normal self-center">(experimental)</span>
+                                <a href="https://github.com/fkm-X3/Tungsten" target="_blank" rel="noopener opacity-80 hover:opacity-100" title="Visit GitHub">
+                                    <i data-lucide="external-link" class="w-4 h-4 text-slate-400 group-hover:text-cyan-400"></i>
+                                </a>
+                            </h3>
+
+                            <p class="text-slate-400 text-sm mt-3 leading-relaxed">
+                                A standalone, ultra-lightweight LLVM-style backend compiler remake. Designed specifically for instant startup, small binary footprints, and execution in bare-metal system environments. <span class="text-amber-400/90 font-medium">(No stable release yet)</span>.
+                            </p>
+
+                            <!-- Key Technical Features List -->
+                            <div class="mt-6 space-y-2 text-xs code-font">
+                                <div class="flex items-center gap-2 text-slate-300">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4 text-cyan-400 flex-shrink-0"></i>
+                                    <span>Zero third-party dependencies IR translation engine</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-slate-300">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4 text-cyan-400 flex-shrink-0"></i>
+                                    <span>Custom instruction selection & register allocation passes</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-slate-300">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4 text-cyan-400 flex-shrink-0"></i>
+                                    <span>Bare-metal target code generation without stdlib overhead</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer / Link -->
+                        <div class="mt-8 pt-6 border-t border-slate-800/80 flex items-center justify-between">
+                            <div class="flex items-center space-x-3 text-xs text-slate-400 code-font">
+                                <span class="flex items-center gap-1">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-[#ec915c]"></span> Zig
+                                </span>
+                            </div>
+
+                            <a href="https://github.com/fkm-X3/Tungsten" target="_blank" rel="noopener noreferrer"
+                               class="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 hover:text-cyan-300 transition-colors">
+                                <span>github.com/fkm-X3/Tungsten</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- PROJECT 3: Custom Programming Language Wolframite (PRIVATE DEV SHOWCASE) -->
+        <section id="lang-w" class="py-20 border-t border-slate-800/80 relative overflow-hidden bg-slate-950">
+            <!-- Background Accent Glow -->
+            <div class="absolute -right-20 top-1/2 transform -translate-y-1/2 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+                
+                <div class="bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-slate-950 border border-slate-800/90 rounded-3xl p-6 sm:p-10 md:p-12 shadow-2xl glow-amber relative">
+                    
+                    <!-- PLACEHOLDER STAMP -->
+                    <div class="absolute top-6 right-6 sm:top-8 sm:right-8 wip-stamp px-4 py-2 rounded font-mono text-xs sm:text-sm font-extrabold tracking-widest uppercase z-10 select-none">
+                        ⚠️ PRIVATE DEV // IN-PROGRESS
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                        
+                        <!-- Left Info -->
+                        <div class="lg:col-span-7 space-y-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-extrabold text-2xl code-font">
+                                    w
+                                </div>
+                                <div>
+                                    <span class="text-amber-400 font-mono text-xs uppercase tracking-wider">// CUSTOM PROGRAMMING LANGUAGE</span>
+                                    <h3 class="text-3xl sm:text-4xl font-extrabold text-white">The Wolframite Language</h3>
+                                </div>
+                            </div>
+
+                            <p class="text-slate-300 leading-relaxed text-base">
+                                <strong class="text-amber-300 font-medium">Wolframite</strong> is my upcoming systems programming language designed specifically to combine deterministic static memory safety with zero-overhead syntax abstractions. It compiles directly into native target code via the <a href="https://github.com/fkm-X3/Tungsten" class="text-cyan-400 hover:underline inline-flex items-center gap-1">Tungsten <span class="text-xs text-amber-400 font-mono">(experimental)</span></a> compiler engine.
+                            </p>
+
+                            <!-- Highlights -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                                <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                                    <div class="text-amber-400 font-bold text-sm mb-1 flex items-center gap-1.5">
+                                        <i data-lucide="zap" class="w-4 h-4"></i> No Garbage Collector
+                                    </div>
+                                    <p class="text-xs text-slate-400">Scoped region allocation with compile-time lifecycle analysis.</p>
+                                </div>
+                                <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                                    <div class="text-amber-400 font-bold text-sm mb-1 flex items-center gap-1.5">
+                                        <i data-lucide="shield-check" class="w-4 h-4"></i> First-Class OS Primitives
+                                    </div>
+                                    <p class="text-xs text-slate-400">Direct inline interrupts, registers, and memory-mapped IO syntax.</p>
+                                </div>
+                            </div>
+
+                            <!-- Private Repo Status Notice Box -->
+                            <div class="p-4 rounded-xl bg-amber-950/20 border border-amber-500/30 text-amber-200/90 text-xs flex items-start gap-3">
+                                <i data-lucide="lock" class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5"></i>
+                                <div>
+                                    <strong class="font-semibold block text-amber-300 mb-0.5">Repository Status: Pre-Release</strong>
+                                    The Wolframite language lexer, parser, and AST code are undergoing work. Release is scheduled once the experimental Tungsten target pipeline is fully stabilized.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Code Preview Snippet -->
+                        <div class="lg:col-span-5">
+                            <div class="rounded-xl bg-slate-950 border border-slate-800 overflow-hidden shadow-inner font-mono text-xs">
+                                <div class="bg-slate-900 px-4 py-2.5 border-b border-slate-800 flex items-center justify-between text-slate-400">
+                                    <span class="flex items-center gap-2">
+                                        <i data-lucide="file-code" class="w-4 h-4 text-amber-400"></i>
+                                        kernel_boot.w
+                                    </span>
+                                    <span class="text-[10px] text-amber-400/80 uppercase tracking-widest font-bold">Lang Wolframite Preview</span>
+                                </div>
+                                <div class="bg-amber-500/10 border-b border-amber-500/20 px-4 py-1.5 text-[11px] text-amber-300/90 font-mono font-medium flex items-center gap-1.5">
+                                    <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-400 flex-shrink-0"></i>
+                                    <span>EXPERIMENTAL // EVERYTHING IS SUBJECT TO CHANGE</span>
+                                </div>
+                                <pre class="p-4 text-slate-300 overflow-x-auto leading-relaxed">
+<span class="text-amber-400">module</span> system::kernel;
+
+<span class="text-slate-500">// Low-level memory mapped write in 'w'</span>
+<span class="text-amber-400">pub fn</span> main() -&gt; <span class="text-cyan-400">u32</span> {
+    <span class="text-purple-400">let</span> vga_mem = <span class="text-cyan-400">volatile</span>::<span class="text-yellow-300">ptr</span>(<span class="text-emerald-400">0xB8000</span>);
+    <span class="text-purple-400">let</span> msg = <span class="text-emerald-300">"Booted via Wolframite"</span>;
+
+    <span class="text-amber-400">for</span> (i, ch) <span class="text-amber-400">in</span> msg.<span class="text-yellow-300">chars</span>().<span class="text-yellow-300">enumerate</span>() {
+        vga_mem.<span class="text-yellow-300">write</span>(i * 2, ch);
+        vga_mem.<span class="text-yellow-300">write</span>(i * 2 + 1, <span class="text-emerald-400">0x0F</span>);
+    }
+
+    <span class="text-amber-400">return</span> <span class="text-emerald-400">0</span>;
+}</pre>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Interactive Compiler Pipeline Sandbox -->
+        <section id="pipeline" class="py-16 border-t border-slate-800/80 bg-slate-950/60">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <div class="text-center max-w-2xl mx-auto mb-10">
+                    <span class="text-cyan-400 font-mono text-xs uppercase tracking-wider">// INTERACTIVE DEMONSTRATION</span>
+                    <h2 class="text-3xl font-extrabold text-white mt-1">Tungsten <span class="text-amber-400 font-mono text-lg font-normal">(experimental)</span> & Wolframite Compilation Pipeline</h2>
+                    <p class="text-slate-400 text-sm mt-2">
+                        Simulate how the Wolframite language code transforms through Tungsten's intermediate lexer, AST, and bare-metal target assembly layers.
+                    </p>
+                </div>
+
+                <!-- Interactive Compiler UI Box -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+                    <!-- Tabs -->
+                    <div class="bg-slate-950 border-b border-slate-800 flex flex-wrap items-center justify-between px-4 py-2">
+                        <div class="flex space-x-2" id="pipeline-tabs">
+                            <button data-tab="source" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                1. Wolframite Source Code
+                            </button>
+                            <button data-tab="ast" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold text-slate-400 hover:text-white hover:bg-slate-800">
+                                2. Tungsten AST
+                            </button>
+                            <button data-tab="ir" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold text-slate-400 hover:text-white hover:bg-slate-800">
+                                3. Low-Level IR
+                            </button>
+                            <button data-tab="asm" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold text-slate-400 hover:text-white hover:bg-slate-800">
+                                4. Bare-Metal x86_64 ASM
+                            </button>
+                        </div>
+                        <button id="run-compile-btn" class="px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold transition flex items-center gap-1.5 my-1">
+                            <i data-lucide="play" class="w-3.5 h-3.5"></i> Run Compilation
+                        </button>
+                    </div>
+
+                    <!-- Code / Output Container -->
+                    <div class="p-6 font-mono text-xs sm:text-sm h-72 overflow-y-auto bg-slate-950/80">
+                        <!-- Tab Content 1: Source Code -->
+                        <div id="tab-source" class="tab-content space-y-1 text-slate-300">
+                            <div class="inline-flex items-center gap-1.5 mb-2 px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono font-bold">
+                                <i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i>
+                                <span>EXPERIMENTAL — EVERYTHING IS SUBJECT TO CHANGE</span>
+                            </div>
+                            <p class="text-slate-500">// Sample Wolframite function: add two integers and return back</p>
+                            <p><span class="text-amber-400">fn</span> <span class="text-cyan-300">add_kernel_ticks</span>(a: <span class="text-emerald-400">u64</span>, b: <span class="text-emerald-400">u64</span>) -&gt; <span class="text-emerald-400">u64</span> {</p>
+                            <p class="pl-4"><span class="text-amber-400">return</span> a + b;</p>
+                            <p>}</p>
+                        </div>
+
+                        <!-- Tab Content 2: AST -->
+                        <div id="tab-ast" class="tab-content hidden space-y-1 text-slate-300">
+                            <p class="text-cyan-400">FunctionDeclaration: add_kernel_ticks</p>
+                            <p class="pl-4 text-slate-400">├─ Parameters:</p>
+                            <p class="pl-8 text-amber-300">├─ Identifier: 'a' (Type: u64)</p>
+                            <p class="pl-8 text-amber-300">└─ Identifier: 'b' (Type: u64)</p>
+                            <p class="pl-4 text-slate-400">├─ Return Type: u64</p>
+                            <p class="pl-4 text-slate-400">└─ BlockStatement:</p>
+                            <p class="pl-8 text-emerald-400">└─ ReturnStatement</p>
+                            <p class="pl-12 text-emerald-300">└─ BinaryExpr (+)</p>
+                            <p class="pl-16 text-slate-400">├─ VarRef (a)</p>
+                            <p class="pl-16 text-slate-400">└─ VarRef (b)</p>
+                        </div>
+
+                        <!-- Tab Content 3: IR -->
+                        <div id="tab-ir" class="tab-content hidden space-y-1 text-slate-300">
+                            <p class="text-slate-500">; Tungsten Zero-Dependency Intermediate Representation (IR)</p>
+                            <p class="text-purple-400">define i64 @add_kernel_ticks(i64 %a, i64 %b) #baremetal {</p>
+                            <p class="pl-4 text-emerald-300">%1 = add i64 %a, %b</p>
+                            <p class="pl-4 text-amber-300">ret i64 %1</p>
+                            <p class="text-purple-400">}</p>
+                        </div>
+
+                        <!-- Tab Content 4: ASM -->
+                        <div id="tab-asm" class="tab-content hidden space-y-1 text-emerald-400">
+                            <p class="text-slate-500">; Generated Bare-Metal x86_64 Assembly</p>
+                            <p class="text-slate-300">global add_kernel_ticks</p>
+                            <p class="text-amber-300">add_kernel_ticks:</p>
+                            <p class="pl-4">mov rax, rdi    <span class="text-slate-500">; Move 1st arg (%a) to accumulator</span></p>
+                            <p class="pl-4">add rax, rsi    <span class="text-slate-500">; Add 2nd arg (%b) to accumulator</span></p>
+                            <p class="pl-4">ret             <span class="text-slate-500">; Fast register return</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Pipeline Status Bar -->
+                    <div class="bg-slate-900 border-t border-slate-800 px-4 py-2 flex items-center justify-between text-xs text-slate-400 font-mono">
+                        <span id="pipeline-status" class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Engine Ready (Tungsten [Experimental] Target: x86_64-unknown-none)
+                        </span>
+                        <span class="text-slate-500">Latency: 0.12ms</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Skills & Core Competencies Section -->
+        <section id="skills" class="py-16 border-t border-slate-800/80 bg-slate-950">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-12">
+                    <span class="text-emerald-400 font-mono text-xs uppercase tracking-wider">// TECHNICAL PROFICIENCY</span>
+                    <h2 class="text-3xl font-extrabold text-white mt-1">Systems Architecture & Tech Stack</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    <!-- Skill Card 1 -->
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 hover:border-emerald-500/40 transition">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-4">
+                            <i data-lucide="cpu" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Systems & OS Dev</h3>
+                        <p class="text-xs text-slate-400 mb-4">Bare-metal hardware initialization, custom allocators, interrupt handling, and driver architecture.</p>
+                        <div class="flex flex-wrap gap-1.5 code-font text-xs">
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-emerald-400">Rust (no_std)</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-blue-400">C11 / C99</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-purple-400">x86_64 ASM</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300">ARM Cortex</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-amber-400">QEMU / GDB</span>
+                        </div>
+                    </div>
+
+                    <!-- Skill Card 2 -->
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 hover:border-cyan-500/40 transition">
+                        <div class="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-4">
+                            <i data-lucide="binary" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Compiler Engineering</h3>
+                        <p class="text-xs text-slate-400 mb-4">Lexical analysis, abstract syntax trees, IR lowering, register allocation, and code generation.</p>
+                        <div class="flex flex-wrap gap-1.5 code-font text-xs">
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-cyan-400">LLVM IR</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-cyan-400">Tungsten IR</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300">AST Lowering</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-emerald-400">Linkers & ELF</span>
+                        </div>
+                    </div>
+
+                    <!-- Skill Card 3 -->
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 hover:border-amber-500/40 transition">
+                        <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-4">
+                            <i data-lucide="wrench" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">Tooling & Engineering</h3>
+                        <p class="text-xs text-slate-400 mb-4">Modern Git workflows, build system automation, memory sanitizers, and CI pipelines.</p>
+                        <div class="flex flex-wrap gap-1.5 code-font text-xs">
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300">Cargo / Make</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300">CMake</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300">Valgrind</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300">Linux / POSIX</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- GitHub Activity Matrix Simulator -->
+        <section class="py-12 border-t border-slate-800/80 bg-slate-950/40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="space-y-1 text-center md:text-left">
+                        <h4 class="text-lg font-bold text-white flex items-center justify-center md:justify-start gap-2">
+                            <i data-lucide="github" class="w-5 h-5 text-emerald-400"></i>
+                            fkm-X3 on GitHub
+                        </h4>
+                        <p class="text-xs text-slate-400">Daily kernel commits, compiler optimizations, and language design work.</p>
+                    </div>
+
+                    <!-- Simulated Heatmap Grid -->
+                    <div class="flex flex-col items-end gap-2">
+                        <div id="heatmap-grid" class="grid grid-flow-col grid-rows-4 gap-1">
+                            <!-- Populated via JavaScript -->
+                        </div>
+                        <div class="flex items-center space-x-2 text-[10px] text-slate-500 font-mono">
+                            <span>Less</span>
+                            <span class="w-2.5 h-2.5 rounded-sm bg-slate-800"></span>
+                            <span class="w-2.5 h-2.5 rounded-sm bg-emerald-950"></span>
+                            <span class="w-2.5 h-2.5 rounded-sm bg-emerald-700"></span>
+                            <span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-sm bg-emerald-400"></span>
+                            <span>More</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="border-t border-slate-800/80 bg-slate-950 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <span class="text-sm font-bold code-font text-white">fkm-X3</span>
+                <span class="text-xs text-slate-500">© 2026 Bare-Metal Systems Dev</span>
+            </div>
+
+            <!-- Links -->
+            <div class="flex items-center space-x-6 text-xs text-slate-400 code-font">
+                <a href="https://github.com/fkm-X3/Alloy-OS" target="_blank" class="hover:text-emerald-400 transition">Alloy-OS</a>
+                <a href="https://github.com/fkm-X3/Tungsten" target="_blank" class="hover:text-cyan-400 transition">Tungsten <span class="text-amber-400 text-[10px]">(exp)</span></a>
+                <a href="https://github.com/fkm-X3" target="_blank" class="hover:text-white transition">GitHub Profile</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript logic -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Initialize Lucide Icons
+            lucide.createIcons();
+
+            // Mobile Menu Toggle
+            const mobileBtn = document.getElementById("mobile-menu-btn");
+            const mobileMenu = document.getElementById("mobile-menu");
+            if (mobileBtn && mobileMenu) {
+                mobileBtn.addEventListener("click", () => {
+                    mobileMenu.classList.toggle("hidden");
+                });
+            }
+
+            // Interactive Terminal Shell Logic
+            const termInput = document.getElementById("terminal-input");
+            const termHistory = document.getElementById("terminal-history");
+            const termClear = document.getElementById("term-clear");
+            const termBtns = document.querySelectorAll(".term-btn");
+
+            const commands = {
+                "help": "Available commands: <span class='text-emerald-400'>alloy</span>, <span class='text-cyan-400'>tungsten</span>, <span class='text-amber-400'>w-lang</span>, <span class='text-slate-300'>skills</span>, <span class='text-slate-400'>clear</span>",
+                "alloy": "<span class='text-emerald-400 font-bold'>Alloy-OS</span>: Custom operating system built in Rust and C. Target: x86_64. Repo: https://github.com/fkm-X3/Alloy-OS",
+                "tungsten": "<span class='text-cyan-400 font-bold'>Tungsten</span> <span class='text-amber-400 font-mono text-xs'>(experimental)</span>: Bare-metal LLVM remake for zero-dependency backend codegen (No stable release yet). Repo: https://github.com/fkm-X3/Tungsten",
+                "w-lang": "<span class='text-amber-400 font-bold'>Lang \"w\"</span>: Custom programming language in private development. Features static memory safety without GC.",
+                "skills": "Primary stack: Rust, C, C++, x86_64 Assembly, LLVM IR, OS Monolithic Kernels, Compilers, QEMU.",
+                "about": "fkm-X3: Systems Developer focused on Operating Systems, Compilers, and Programming Languages."
+            };
+
+            function runTerminalCommand(cmd) {
+                const cleanCmd = cmd.trim().toLowerCase();
+                
+                // Add command row
+                const userRow = document.createElement("div");
+                userRow.className = "flex items-center space-x-2";
+                userRow.innerHTML = `<span class="text-emerald-400 font-bold">&gt;</span> <span class="text-white">${cmd}</span>`;
+                termHistory.appendChild(userRow);
+
+                if (cleanCmd === "clear") {
+                    termHistory.innerHTML = "";
+                } else if (commands[cleanCmd]) {
+                    const resRow = document.createElement("div");
+                    resRow.className = "text-slate-300 pl-4 border-l-2 border-emerald-500/40 my-1";
+                    resRow.innerHTML = commands[cleanCmd];
+                    termHistory.appendChild(resRow);
+                } else if (cleanCmd !== "") {
+                    const errRow = document.createElement("div");
+                    errRow.className = "text-rose-400 pl-4";
+                    errRow.innerHTML = `Command not recognized: '${cleanCmd}'. Type 'help' for available commands.`;
+                    termHistory.appendChild(errRow);
+                }
+
+                // Scroll to bottom
+                const termBody = document.getElementById("terminal-body");
+                termBody.scrollTop = termBody.scrollHeight;
+            }
+
+            if (termInput) {
+                termInput.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") {
+                        runTerminalCommand(termInput.value);
+                        termInput.value = "";
+                    }
+                });
+            }
+
+            if (termClear) {
+                termClear.addEventListener("click", () => {
+                    termHistory.innerHTML = "";
+                });
+            }
+
+            termBtns.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const cmd = btn.getAttribute("data-cmd");
+                    runTerminalCommand(cmd);
+                });
+            });
+
+            // Compiler Pipeline Tabs Logic
+            const tabBtns = document.querySelectorAll(".tab-btn");
+            const tabContents = document.querySelectorAll(".tab-content");
+            const runCompileBtn = document.getElementById("run-compile-btn");
+            const pipelineStatus = document.getElementById("pipeline-status");
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const targetTab = btn.getAttribute("data-tab");
+
+                    tabBtns.forEach(b => {
+                        b.classList.remove("bg-emerald-500/20", "text-emerald-400", "border", "border-emerald-500/30");
+                        b.classList.add("text-slate-400");
+                    });
+
+                    btn.classList.add("bg-emerald-500/20", "text-emerald-400", "border", "border-emerald-500/30");
+                    btn.classList.remove("text-slate-400");
+
+                    tabContents.forEach(content => {
+                        if (content.id === `tab-${targetTab}`) {
+                            content.classList.remove("hidden");
+                        } else {
+                            content.classList.add("hidden");
+                        }
+                    });
+                });
+            });
+
+            if (runCompileBtn) {
+                runCompileBtn.addEventListener("click", () => {
+                    pipelineStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span> Compiling 'w' source via Tungsten engine...`;
+                    setTimeout(() => {
+                        pipelineStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Optimization Pass Complete! 0 errors, 0 warnings.`;
+                    }, 500);
+                });
+            }
+
+            // Generate Simulated GitHub Heatmap Grid
+            const heatmapGrid = document.getElementById("heatmap-grid");
+            if (heatmapGrid) {
+                const colors = [
+                    "bg-slate-800", 
+                    "bg-slate-800", 
+                    "bg-emerald-950", 
+                    "bg-emerald-800", 
+                    "bg-emerald-600", 
+                    "bg-emerald-400"
+                ];
+                
+                for (let i = 0; i < 64; i++) {
+                    const square = document.createElement("div");
+                    const randIndex = Math.floor(Math.random() * colors.length);
+                    square.className = `w-3 h-3 rounded-sm ${colors[randIndex]} transition-transform hover:scale-125`;
+                    square.title = `Contributions logged`;
+                    heatmapGrid.appendChild(square);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
